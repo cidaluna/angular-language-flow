@@ -1,0 +1,25 @@
+<header class="app-header">
+  <span class="app-header__brand">Logo</span>
+
+  <div class="app-header__controls">
+    <label class="app-header__field">
+      {{ 'header.languageLabel' | transloco }}
+      <select
+        class="app-header__select"
+        [value]="languageService.activeLang()"
+        (change)="onLanguageChange($event)"
+      >
+        @for (lang of languages; track lang) {
+          <option [value]="lang.code">
+            {{ lang.label }}
+          </option>
+        }
+      </select>
+    </label>
+
+    <label class="app-header__field app-header__field--checkbox">
+      <input type="checkbox" (change)="onSimulateErrorToggle($event)" />
+      {{ 'header.simulateError' | transloco }}
+    </label>
+  </div>
+</header>
