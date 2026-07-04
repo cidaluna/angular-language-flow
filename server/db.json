@@ -1,0 +1,14 @@
+{
+  "pt-BR": [
+    { "id": 1, "titulo": "Bem-vindo", "descricao": "Conteúdo de exemplo vindo da API em português." },
+    { "id": 2, "titulo": "Sobre nós", "descricao": "Texto fixo número dois, retornado em português." },
+    { "id": 3, "titulo": "Serviços", "descricao": "Texto fixo número três, retornado em português." },
+    { "id": 4, "titulo": "Contato", "descricao": "Texto fixo número quatro, retornado em português." }
+  ],
+  "en-US": [
+    { "id": 1, "titulo": "Welcome", "descricao": "Sample content returned from the API in English." },
+    { "id": 2, "titulo": "About us", "descricao": "Fixed text number two, returned in English." },
+    { "id": 3, "titulo": "Services", "descricao": "Fixed text number three, returned in English." },
+    { "id": 4, "titulo": "Contact", "descricao": "Fixed text number four, returned in English." }
+  ]
+}
