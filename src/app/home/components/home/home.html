@@ -1,0 +1,19 @@
+<section class="home">
+  <h5 class="home__title">Os dados abaixo nascem do response da API</h5>
+
+  <p class="home__error" *ngIf="homeDataService.error()">
+    {{ 'home.errorMessage' | transloco }}
+  </p>
+
+  <p class="home__loading" *ngIf="homeDataService.loading()">
+    {{ 'home.loading' | transloco }}
+  </p>
+
+  <div class="home__grid" *ngIf="!homeDataService.loading()">
+    <article class="home__card" *ngFor="let item of homeDataService.items()">
+      <span class="home__card-number">{{ item.id }}</span>
+      <h6 class="home__card-title">{{ item.titulo }}</h6>
+      <p class="home__card-description">{{ item.descricao }}</p>
+    </article>
+  </div>
+</section>
