@@ -1,0 +1,10 @@
+{
+  "header": {
+    "languageLabel": "Language",
+    "simulateError": "Simulate error"
+  },
+  "home": {
+    "errorMessage": "Could not load the data. Please try again.",
+    "loading": "Loading..."
+  }
+}
