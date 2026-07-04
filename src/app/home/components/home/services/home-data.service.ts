@@ -1,9 +1,9 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 
-import { LanguageService } from './language.service';
 import { HomeItem } from '../../home/interfaces/home-item.interface';
 import { AppLanguage } from '../../home/interfaces/language.type';
+import { LanguageService } from '../../../../core/services/language.service';
 
 /**
  * Orquestra o ciclo: chama a fake API já com o idioma pretendido no header
@@ -19,6 +19,16 @@ export class HomeDataService {
   readonly items = signal<HomeItem[]>([]);
   readonly loading = signal(false);
   readonly error = signal(false);
+
+    /**
+   * Só vira `true` na primeira resposta com sucesso e nunca mais volta a
+   * `false` (nem num erro futuro): nesse caso os dados/idioma anteriores
+   * continuam válidos e consistentes entre si, então não há motivo para
+   * esconder os textos fixos de novo. O que ele impede é o h5 (ou qualquer
+   * texto fixo do front amarrado a este dado) aparecer ANTES de sabermos,
+   * com certeza, que dado e idioma já estão sincronizados.
+   */
+  readonly ready = signal(false);
 
   /** Toggle de teste/demo: liga o parâmetro que força erro na fake API. */
   readonly simulateError = signal(false);
@@ -41,6 +51,7 @@ export class HomeDataService {
       next: (items) => {
         this.items.set(items);
         this.languageService.commit(lang);
+        this.ready.set(true);
         this.loading.set(false);
       },
       error: () => {

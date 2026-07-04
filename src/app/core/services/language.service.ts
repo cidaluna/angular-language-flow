@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
-import { AppLanguage, DEFAULT_LANGUAGE } from '../../home/interfaces/language.type';
+import { LocalStorageService } from './local-storage.service';
+import { AppLanguage, DEFAULT_LANGUAGE } from '../../home/components/home/interfaces/language.type';
 
 const STORAGE_KEY = 'app-language';
 
@@ -17,6 +18,7 @@ const STORAGE_KEY = 'app-language';
 @Injectable({ providedIn: 'root' })
 export class LanguageService {
   private readonly translocoService = inject(TranslocoService);
+  private readonly storage = inject(LocalStorageService);
 
   /** Idioma efetivamente aplicado (persistido + refletido no Transloco). */
   readonly activeLang = signal<AppLanguage>(this.readFromStorage());
@@ -27,13 +29,14 @@ export class LanguageService {
   }
 
   commit(lang: AppLanguage): void {
-    localStorage.setItem(STORAGE_KEY, lang);
+    //localStorage.setItem(STORAGE_KEY, lang);
+    this.storage.set(STORAGE_KEY, lang);
     this.translocoService.setActiveLang(lang);
     this.activeLang.set(lang);
   }
 
   private readFromStorage(): AppLanguage {
-    const stored = localStorage.getItem(STORAGE_KEY) as AppLanguage | null;
+    const stored = this.storage.get<AppLanguage>(STORAGE_KEY);
     return stored ?? DEFAULT_LANGUAGE;
   }
 }

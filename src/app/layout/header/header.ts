@@ -1,9 +1,9 @@
 import { Component, inject } from '@angular/core';
 import { LanguageService } from '../../core/services/language.service';
-import { AppLanguage, AVAILABLE_LANGUAGES } from '../../home/interfaces/language.type';
 import { TranslocoModule } from '@jsverse/transloco';
-import { HomeDataService } from '../../core/services/home-data.service';
 import { CommonModule } from '@angular/common';
+import { HomeDataService } from '../../home/components/home/services/home-data.service';
+import { AppLanguage, AVAILABLE_LANGUAGES } from '../../home/components/home/interfaces/language.type';
 
 @Component({
   selector: 'app-header',

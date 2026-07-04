@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, OnInit } from '@angular/core';
 import { TranslocoModule } from '@jsverse/transloco';
-import { HomeDataService } from '../../../core/services/home-data.service';
+import { HomeDataService } from './services/home-data.service';
 
 @Component({
   selector: 'app-home',

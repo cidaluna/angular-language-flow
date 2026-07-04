@@ -1,5 +1,10 @@
 <section class="home">
-  <h5 class="home__title">Os dados abaixo nascem do response da API</h5>
+  <h5 class="home__title" *ngIf="homeDataService.ready()">{{ 'home.title' | transloco}}</h5>
+
+   <!-- Placeholder neutro: nenhum texto/idioma aqui, só um esqueleto visual,
+       assim não corremos o risco de mostrar algo no idioma errado antes da
+       primeira resposta com sucesso da API. -->
+  <div class="home__title-skeleton" *ngIf="!homeDataService.ready()"></div>
 
   <p class="home__error" *ngIf="homeDataService.error()">
     {{ 'home.errorMessage' | transloco }}
@@ -16,4 +21,11 @@
       <p class="home__card-description">{{ item.descricao }}</p>
     </article>
   </div>
+
+    <!-- Parágrafo fixo do front (não vem da API). Mesma regra do h5: só
+       aparece depois que os dados da chamada HTTP já estiverem na tela,
+       para manter idioma da tela e idioma dos dados sempre sincronizados. -->
+  <p class="home__about" *ngIf="homeDataService.ready()">
+    {{ 'home.aboutParagraph' | transloco }}
+  </p>
 </section>

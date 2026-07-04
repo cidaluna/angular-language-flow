@@ -1,14 +1,14 @@
 {
   "pt-BR": [
-    { "id": 1, "titulo": "Bem-vindo", "descricao": "Conteúdo de exemplo vindo da API em português." },
-    { "id": 2, "titulo": "Sobre nós", "descricao": "Texto fixo número dois, retornado em português." },
-    { "id": 3, "titulo": "Serviços", "descricao": "Texto fixo número três, retornado em português." },
-    { "id": 4, "titulo": "Contato", "descricao": "Texto fixo número quatro, retornado em português." }
+    { "id": 1, "titulo": "Trilha de estudos", "descricao": "API - Conteúdo adaptado ao seu ritmo." },
+    { "id": 2, "titulo": "Mentoria", "descricao": "API - Acompanhamento próximo em cada etapa." },
+    { "id": 3, "titulo": "Certificado", "descricao": "API - Reconhecimento ao final do curso." },
+    { "id": 4, "titulo": "Comunidade", "descricao": "API - Troca com outros alunos e ex-alunos." }
   ],
   "en-US": [
-    { "id": 1, "titulo": "Welcome", "descricao": "Sample content returned from the API in English." },
-    { "id": 2, "titulo": "About us", "descricao": "Fixed text number two, returned in English." },
-    { "id": 3, "titulo": "Services", "descricao": "Fixed text number three, returned in English." },
-    { "id": 4, "titulo": "Contact", "descricao": "Fixed text number four, returned in English." }
+    { "id": 1, "titulo": "Learning path", "descricao": "API - Content adapted to your pace." },
+    { "id": 2, "titulo": "Mentorship", "descricao": "API - Close guidance at every step." },
+    { "id": 3, "titulo": "Certification", "descricao": "API - Recognition at the end of the course." },
+    { "id": 4, "titulo": "Community", "descricao": "API - Exchange with others students and alumni." }
   ]
 }
