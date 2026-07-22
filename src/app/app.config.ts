@@ -19,6 +19,11 @@ export const appConfig: ApplicationConfig = {
         fallbackLang: 'pt-BR',
         reRenderOnLangChange: true,
         prodMode: false,
+        missingHandler: {
+          logMissingKey: true,
+          useFallbackTranslation: true,
+          allowEmpty: false,
+        }
       },
       loader: TranslocoHttpLoader,
     }),
