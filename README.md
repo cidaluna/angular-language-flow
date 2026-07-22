@@ -161,6 +161,35 @@ Caso precise traduzir uma propriedade única em um componente isolado do Design 
 </ds-input>
 ```
 ---
+### 📏 Linha de Corte: Pipe (`| transloco`) vs Diretiva (`*transloco`)
+
+Para manter a aplicação performática e o consumo de memória controlado, estabelecemos a seguinte métrica de corte para revisões de código (PRs):
+
+*   **⚠️ Limite Máximo de Pipes:** É permitida a utilização de no máximo **3 a 4 ocorrências** do pipe `\| transloco` por arquivo HTML.
+*   **🚀 Regra de Transição:** Caso o arquivo HTML necessite traduzir **5 ou mais chaves**, torna-se **obrigatório** o uso do escopo estrutural `<ng-container *transloco="let t">` envolvendo o trecho ou a totalidade do código.
+
+**Exemplo de cenário que DEVE ser rejeitado no Code Review:**
+```html
+<!-- Repetição ineficiente: 5 assinaturas impuras em memória -->
+<h1>{{ 'auth.login.title' \| transloco }}</h1>
+<p>{{ 'auth.login.subtitle' \| transloco }}</p>
+<input [placeholder]="'auth.login.userPlaceholder' \| transloco">
+<input [placeholder]="'auth.login.passPlaceholder' \| transloco">
+<button>{{ 'auth.login.submitBtn' \| transloco }}</button>
+```
+
+**Exemplo corrigido e aprovado:**
+```html
+<!-- Otimizado: Apenas 1 assinatura gerenciando todo o escopo do formulário -->
+<ng-container *transloco="let t">
+  <h1>{{ t('auth.login.title') }}</h1>
+  <p>{{ t('auth.login.subtitle') }}</p>
+  <input [placeholder]="t('auth.login.userPlaceholder')">
+  <input [placeholder]="t('auth.login.passPlaceholder')">
+  <button>{{ t('auth.login.submitBtn') }}</button>
+</ng-container>
+```
+---
 ## 📐 Arquitetura de Pastas e Estrutura de Arquivos
 
 Seguindo os padrões de arquitetura corporativa para o Angular 18, a internacionalização é tratada como um serviço de infraestrutura global dentro de `core/`. Abaixo está a árvore de diretórios focada no ecossistema do Transloco e NGXS, demonstrando como ela se acopla aos seletores e interceptores globais já existentes na aplicação:
