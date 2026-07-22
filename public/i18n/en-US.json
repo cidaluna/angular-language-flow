@@ -8,6 +8,12 @@
     "aboutParagraph": "Our institution values continuous learning and the exchange of experience between students, mentors, and industry professionals. We aim to provide a structured environment, with up-to-date content and close support at every step of the journey. We believe that quality education is built through consistent practice, hands-on guidance, and a truly engaged community. This text is just placeholder content and does not represent real content from the application.",
     "title": "Check out what our institution has to offer:",
     "errorMessage": "Could not load the data. Please try again.",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "greeting": "Hello, {{nome}}. You have {{qtd}} messages.",
+    "actions": {
+      "deleteBtnText": "Delete Account",
+      "deleteAccount": "Delete account of {{nome}}",
+      "deleteWarning": "Warning: This action is permanent and will erase all your history and financial data from the system."
+    }
   }
 }

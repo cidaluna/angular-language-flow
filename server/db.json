@@ -1,14 +1,14 @@
 {
   "pt-BR": [
-    { "id": 1, "titulo": "Trilha de estudos", "descricao": "API - Conteúdo adaptado ao seu ritmo." },
-    { "id": 2, "titulo": "Mentoria", "descricao": "API - Acompanhamento próximo em cada etapa." },
-    { "id": 3, "titulo": "Certificado", "descricao": "API - Reconhecimento ao final do curso." },
-    { "id": 4, "titulo": "Comunidade", "descricao": "API - Troca com outros alunos e ex-alunos." }
+    { "id": 1, "titulo": "API - Trilha de estudos", "descricao": "API - Conteúdo adaptado ao seu ritmo." },
+    { "id": 2, "titulo": "API - Mentoria", "descricao": "API - Acompanhamento próximo em cada etapa." },
+    { "id": 3, "titulo": "API - Certificado", "descricao": "API - Reconhecimento ao final do curso." },
+    { "id": 4, "titulo": "API - Comunidade", "descricao": "API - Troca com outros alunos e ex-alunos." }
   ],
   "en-US": [
-    { "id": 1, "titulo": "Learning path", "descricao": "API - Content adapted to your pace." },
-    { "id": 2, "titulo": "Mentorship", "descricao": "API - Close guidance at every step." },
-    { "id": 3, "titulo": "Certification", "descricao": "API - Recognition at the end of the course." },
-    { "id": 4, "titulo": "Community", "descricao": "API - Exchange with others students and alumni." }
+    { "id": 1, "titulo": "API - Learning path", "descricao": "API - Content adapted to your pace." },
+    { "id": 2, "titulo": "API - Mentorship", "descricao": "API - Close guidance at every step." },
+    { "id": 3, "titulo": "API - Certification", "descricao": "API - Recognition at the end of the course." },
+    { "id": 4, "titulo": "API - Community", "descricao": "API - Exchange with others students and alumni." }
   ]
 }

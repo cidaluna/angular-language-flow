@@ -8,6 +8,12 @@
     "aboutParagraph": "Nossa instituição valoriza o aprendizado contínuo e a troca de experiências entre alunos, mentores e profissionais do mercado. Buscamos oferecer um ambiente estruturado, com conteúdo atualizado e suporte próximo em cada etapa da jornada. Acreditamos que uma formação de qualidade é construída com prática constante, acompanhamento humano e uma comunidade verdadeiramente engajada. Este texto é apenas um exemplo de preenchimento e não representa conteúdo real da aplicação.",
     "title": "Confira abaixo o que nossa instituição de ensino oferece:",
     "errorMessage": "Não foi possível carregar os dados. Tente novamente.",
-    "loading": "Carregando..."
+    "loading": "Carregando...",
+    "greeting": "Olá, {{nome}}. Você tem {{qtd}} mensagens.",
+    "actions": {
+      "deleteBtnText": "Excluir Conta",
+      "deleteAccount": "Excluir conta de {{nome}}",
+      "deleteWarning": "Aviso: Esta ação é permanente e apagará todos os seus históricos e dados financeiros do sistema."
+    }
   }
 }
