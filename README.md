@@ -226,3 +226,22 @@ src/
 ```
 
 ---
+## Responsabilidades
+
+| Camada | Responsabilidade |
+|--------|------------------|
+| Header | Capturar a intenção do usuário |
+| LanguageFacade | Orquestrar todo o fluxo |
+| LanguageApiService | Comunicação com o BFF |
+| LanguageStorageService | Persistência do idioma |
+| LanguageState (NGXS) | Estado da aplicação |
+| Transloco | Traduções estáticas do frontend |
+| Interceptor | Enviar `Accept-Language` automaticamente |
+
+## Como adicionar um novo idioma
+
+1. Criar o arquivo em `assets/i18n`.
+2. Atualizar `supported-locales.ts`.
+3. Atualizar `AppLocale`.
+4. Garantir suporte no BFF.
+5. Adicionar testes unitários.
