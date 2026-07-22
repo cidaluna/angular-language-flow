@@ -26,4 +26,15 @@ export class Home implements OnInit {
   abrirModalConfirmacao() {
     // teste
   }
+
+   // 🕵️‍♂️ RASTREADOR 1: Dispara a cada ciclo de verificação do Angular
+  ngDoCheck(): void {
+    console.log(' [Ciclo de Vida] Home Component verificado pelo Change Detection!');
+  }
+
+  // 🕵️‍♂️ RASTREADOR 2: Método chamado direto no HTML para flagrar reavaliações
+  rastrearRenderizacao(): string {
+    console.warn('⚠️ [Template] O HTML do Home Component foi renderizado/reavaliado novamente!');
+    return ''; // Retorna string vazia para não quebrar o layout
+  }
 }

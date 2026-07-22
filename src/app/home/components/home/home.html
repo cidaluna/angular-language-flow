@@ -1,4 +1,6 @@
 <section class="home">
+  {{ rastrearRenderizacao() }}
+
   <!-- O Transloco só vai mostrar o h5 quando o JSON terminar de baixar -->
   <ng-container *transloco="let t; loadingTpl: carregando">
     <h5>
