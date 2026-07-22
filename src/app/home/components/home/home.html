@@ -1,31 +1,74 @@
 <section class="home">
-  <h5 class="home__title" *ngIf="homeDataService.ready()">{{ 'home.title' | transloco}}</h5>
+  <!-- O Transloco só vai mostrar o h5 quando o JSON terminar de baixar -->
+  <ng-container *transloco="let t; loadingTpl: carregando">
+    <h5>
+      {{ t('home.greeting', { nome: nomeA(), qtd: qtdA() }) }}
+    </h5>
+  </ng-container>
+
+  <!-- Template invisível/vazio ou com o seu componente de esqueleto/spinner -->
+  <ng-template #carregando>
+    <!-- Pode deixar vazio ou colocar uma tag de carregamento do seu Design System -->
+    <span></span>
+  </ng-template>
+
+
+  @if(homeDataService.ready()) {
+    <h5 class="home__title">{{ 'home.title' | transloco}}</h5>
+  }
 
    <!-- Placeholder neutro: nenhum texto/idioma aqui, só um esqueleto visual,
        assim não corremos o risco de mostrar algo no idioma errado antes da
        primeira resposta com sucesso da API. -->
-  <div class="home__title-skeleton" *ngIf="!homeDataService.ready()"></div>
+  @if (!homeDataService.ready()) {
+    <div class="home__title-skeleton"></div>
+  }
 
-  <p class="home__error" *ngIf="homeDataService.error()">
-    {{ 'home.errorMessage' | transloco }}
-  </p>
+  @if (homeDataService.error()) {
+    <p class="home__error">{{ 'home.errorMessage' | transloco }}</p>
+  }
 
-  <p class="home__loading" *ngIf="homeDataService.loading()">
-    {{ 'home.loading' | transloco }}
-  </p>
+  @if (homeDataService.loading()) {
+    <p class="home__loading">{{ 'home.loading' | transloco }}</p>
+  }
 
-  <div class="home__grid" *ngIf="!homeDataService.loading()">
-    <article class="home__card" *ngFor="let item of homeDataService.items()">
-      <span class="home__card-number">{{ item.id }}</span>
-      <h6 class="home__card-title">{{ item.titulo }}</h6>
-      <p class="home__card-description">{{ item.descricao }}</p>
-    </article>
+  @if (!homeDataService.loading()) {
+    <div class="home__grid">
+      @for (item of homeDataService.items(); track $index) {
+        <article class="home__card">
+          <span class="home__card-number">{{ item.id }}</span>
+          <h6 class="home__card-title">{{ item.titulo }}</h6>
+          <p class="home__card-description">{{ item.descricao }}</p>
+        </article>
+      }
+    </div>
+  }
+
+  <ng-container *transloco="let t">
+  <div class="action-container">
+
+    <!-- Botão de Ação Interativo do seu Design System -->
+    <button
+      class="btn-danger"
+      [ariaLabel]="t('home.actions.deleteAccount', { nome: nomeA() })"
+      aria-describedby="desc-delete-account"
+      (click)="abrirModalConfirmacao()">
+      {{ t('home.actions.deleteBtnText') }}
+    </button>
+
+    <!-- Descrição Acessível Oculta Visualmente (.sr-only / Screen Reader Only) -->
+    <!-- Leitores de tela lerão este parágrafo imediatamente após ler o label do botão -->
+    <span id="desc-delete-account" class="sr-only">
+      {{ t('home.actions.deleteWarning') }}
+    </span>
+
   </div>
+</ng-container>
 
     <!-- Parágrafo fixo do front (não vem da API). Mesma regra do h5: só
        aparece depois que os dados da chamada HTTP já estiverem na tela,
        para manter idioma da tela e idioma dos dados sempre sincronizados. -->
-  <p class="home__about" *ngIf="homeDataService.ready()">
-    {{ 'home.aboutParagraph' | transloco }}
-  </p>
+  @if (homeDataService.ready()) {
+    <p class="home__about">{{ 'home.aboutParagraph' | transloco }}</p>
+  }
 </section>
