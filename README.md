@@ -113,3 +113,87 @@ A tabela abaixo define os padrões de desenvolvimento para a internacionalizaç�
 | **Pluralização complexa** | `<p *ngIf="total === 1">1 item encontrado</p>`<br>`<p *ngIf="total !== 1">{{total}} itens encontrados</p>` | `<p>{{ 'search.result' \| transloco: { count: total } }}</p>`<br><br>*No JSON (com Transloco MessageFormat):*<br>`"result": "{count, plural, =0 {Nenhum item} =1 {1 item} other {# itens}}"` | **Clean Code:** Elimina diretivas estruturais (`*ngIf`) desnecessárias e poluição visual no HTML para tratar regras gramaticais e numéricas de plural. |
 
 ⚠️ **Aviso de Sincronismo:** Toda nova chave criada nos arquivos `.json` deve ser adicionada simultaneamente em `pt-BR.json`, `en.json` e `es.json` para evitar erros de renderização ou chaves em branco (*missing translation*) em produção.
+
+---
+### 🧩 Uso Avançado: Integração com Design System e Tags Semânticas
+
+Para utilizar a diretiva estrutural `*transloco="let t"` sem injetar tags HTML adicionais (como `<div>`) que possam quebrar o layout, as regras de CSS do seu Design System ou a semântica estrutural (`<header>`, `<footer>`), utilize a tag lógica **`<ng-container>`**. O Angular remove esta tag do DOM final durante a renderização.
+
+#### 1. Uso Semântico Estrutural (Sem injetar DIVs no DOM)
+Ideal para encapsular blocos inteiros mantendo a fidelidade das tags nativas e componentes customizados:
+
+```html
+<header>
+  <!-- O ng-container não gera nenhuma tag física na tela, apenas expõe a variável 't' -->
+  <ng-container *transloco="let t">
+    <h1>{{ t('header.title') }}</h1>
+    <p>{{ t('header.subtitle') }}</p>
+  </ng-container>
+</header>
+```
+
+#### 2. Passando Traduções para Inputs de Componentes do Design System
+Se os componentes do seu Design System recebem texto via propriedades (`@Input`), você pode invocar a função `t()` diretamente no mapeamento de propriedade (Property Binding) do Angular:
+
+```html
+<ng-container *transloco="let t">
+  <!-- Exemplo com Dropdown customizado -->
+  <ds-dropdown 
+    [label]="t('form.selectLanguage')" 
+    [placeholder]="t('form.chooseOption')">
+    <ds-dropdown-item value="pt-BR">Português</ds-dropdown-item>
+  </ds-dropdown>
+
+  <!-- Exemplo com Tooltip customizado -->
+  <button [dsTooltip]="t('actions.deleteHelp')">
+    {{ t('actions.delete') }}
+  </button>
+</ng-container>
+```
+
+#### 3. Uso Direto sem Diretiva Estrutural (Pipe Alternativo)
+Caso precise traduzir uma propriedade única em um componente isolado do Design System e não queira criar um bloco `<ng-container>`, você pode usar o pipe `| transloco` diretamente na propriedade:
+
+```html
+<ds-input 
+  [label]="'form.name' | transloco" 
+  [errorMessage]="'form.required' | transloco">
+</ds-input>
+```
+---
+## 📐 Arquitetura de Pastas e Estrutura de Arquivos
+
+Seguindo os padrões de arquitetura corporativa para o Angular 18, a internacionalização é tratada como um serviço de infraestrutura global dentro de `core/`. Abaixo está a árvore de diretórios focada no ecossistema do Transloco e NGXS, demonstrando como ela se acopla aos seletores e interceptores globais já existentes na aplicação:
+
+```text
+src/
+├── app/
+│   ├── core/
+│   │   ├── interceptors/
+│   │   │   ├── global.interceptor.ts         # Interceptor global existente
+│   │   │   └── i18n-http.interceptor.ts      # NOVO: Injeta header de idioma nas requisições do BFF
+│   │   ├── services/
+│   │   │   └── loader.service.ts             # Loader global existente (exibe/esconde spinner)
+│   │   └── i18n/                             # NOVO: Módulo isolado de Internacionalização
+│   │       ├── constants/
+│   │       │   └── i18n.constants.ts         # Definição única de idiomas suportados, chaves e tipos
+│   │       ├── helpers/
+│   │       │   └── i18n-test.helper.ts       # Utilitário de Mock para testes unitários (.spec)
+│   │       ├── state/
+│   │       │   ├── i18n.actions.ts           # Actions do NGXS para troca de idioma
+│   │       │   ├── i18n.state.ts             # Estado do NGXS que gerencia o fluxo com o BFF Java
+│   │       │   └── i18n.state.spec.ts        # Testes unitários do fluxo de transição de idioma
+│   │       └── transloco-loader.ts           # Loader do Transloco configurado com as constantes
+│   └── store/                                # Gerenciamento de Estados Globais Existentes
+│       ├── user/
+│       │   └── user.state.ts                 # Estado do usuário logado
+│       └── preferences/
+│           └── preferences.state.ts          # Estado de preferências do sistema
+└── assets/
+    └── i18n/                                 # Dicionários de tradução exclusivos do Front-end
+        ├── pt-BR.json
+        ├── en.json
+        └── es.json
+```
+
+---
