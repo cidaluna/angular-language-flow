@@ -1,0 +1,52 @@
+.error-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: var(--color-gray-100, #f3f4f6);
+  padding: 24px;
+}
+
+.error-card {
+  text-align: center;
+  background-color: #ffffff;
+  padding: 48px;
+  border-radius: 24px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  max-width: 480px;
+  width: 100%;
+
+  .error-code {
+    font-size: 4rem;
+    color: var(--color-red-600, #dc2626);
+    margin: 0 0 16px 0;
+  }
+
+  .error-message {
+    font-size: 1.5rem;
+    color: var(--color-gray-900, #111827);
+    margin: 0 0 12px 0;
+  }
+
+  .error-description {
+    color: var(--color-gray-600, #4b5563);
+    line-height: 1.6;
+    margin: 0 0 32px 0;
+  }
+
+  .error-btn {
+    background-color: var(--color-blue-600, #3b82f6);
+    color: #ffffff;
+    border: none;
+    padding: 14px 28px;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: var(--color-blue-900, #1e3a8a);
+    }
+  }
+}
