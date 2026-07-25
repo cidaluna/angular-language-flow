@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Translation, TranslocoLoader } from '@jsverse/transloco';
+import { Observable } from 'rxjs';
 
 /**
  * Carrega os textos fixos da tela a partir de /assets/i18n/{lang}.json.
@@ -11,7 +12,11 @@ import { Translation, TranslocoLoader } from '@jsverse/transloco';
 export class TranslocoHttpLoader implements TranslocoLoader {
   private readonly http = inject(HttpClient);
 
-  getTranslation(lang: string) {
+  /**
+   * Executa a busca assíncrona do arquivo JSON contendo os dicionários locais de tradução.
+   * Isolado nesta classe para permitir estratégias alternativas de carregamento (ex: S3, CDN ou Local Storage).
+   */
+  getTranslation(lang: string): Observable<Translation> {
     return this.http.get<Translation>(`/i18n/${lang}.json`);
   }
 }

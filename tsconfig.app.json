@@ -1,15 +1,21 @@
-/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
-/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/app",
-    "types": []
+    "rootDir": "src",           // Define explicitamente o ponto de partida do código-fonte
+    "baseUrl": "./",
+    "types": ["zone.js"]        // Força o TypeScript a carregar as declarações do zone.js
   },
+  "files": [
+    "src/main.ts"
+  ],
   "include": [
+    "src/**/*.d.ts",
     "src/**/*.ts"
   ],
   "exclude": [
-    "src/**/*.spec.ts"
+    "src/**/*.spec.ts",
+    "node_modules",
+    "*.ts" // IMPEDE que arquivos soltos na raiz (ex: angular.config.ts) entrem na árvore do App
   ]
 }
