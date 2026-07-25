@@ -8,3 +8,13 @@ export interface HomeItem {
   titulo: string;
   descricao: string;
 }
+
+export interface HomeItemsResponse {
+  id: number;
+  lang: 'pt-BR' | 'en-US' | 'es-ES'; // Preferência de idioma salva na api fake
+  items: Array<{
+    id: number;
+    titulo: string;
+    descricao: string;
+  }>;
+}

@@ -1,14 +1,34 @@
 {
-  "pt-BR": [
-    { "id": 1, "titulo": "API - Trilha de estudos", "descricao": "API - Conteúdo adaptado ao seu ritmo." },
-    { "id": 2, "titulo": "API - Mentoria", "descricao": "API - Acompanhamento próximo em cada etapa." },
-    { "id": 3, "titulo": "API - Certificado", "descricao": "API - Reconhecimento ao final do curso." },
-    { "id": 4, "titulo": "API - Comunidade", "descricao": "API - Troca com outros alunos e ex-alunos." }
-  ],
-  "en-US": [
-    { "id": 1, "titulo": "API - Learning path", "descricao": "API - Content adapted to your pace." },
-    { "id": 2, "titulo": "API - Mentorship", "descricao": "API - Close guidance at every step." },
-    { "id": 3, "titulo": "API - Certification", "descricao": "API - Recognition at the end of the course." },
-    { "id": 4, "titulo": "API - Community", "descricao": "API - Exchange with others students and alumni." }
+  "apiHomeItems": [
+    {
+      "id": 1,
+      "lang": "pt-BR",
+      "items": [
+        { "id": 1, "titulo": "API - Trilha de estudos", "descricao": "API - Conteúdo adaptado ao seu ritmo." },
+        { "id": 2, "titulo": "API - Mentoria", "descricao": "API - Acompanhamento próximo em cada etapa." },
+        { "id": 3, "titulo": "API - Certificado", "descricao": "API - Reconhecimento ao final do curso." },
+        { "id": 4, "titulo": "API - Comunidade", "descricao": "API - Troca com outros alunos e ex-alunos." }
+      ]
+    },
+    {
+      "id": 2,
+      "lang": "en-US",
+      "items": [
+        { "id": 1, "titulo": "API - Learning path", "descricao": "API - Content adapted to your pace." },
+        { "id": 2, "titulo": "API - Mentorship", "descricao": "API - Close guidance at every step." },
+        { "id": 3, "titulo": "API - Certification", "descricao": "API - Recognition at the end of the course." },
+        { "id": 4, "titulo": "API - Community", "descricao": "API - Exchange with others students and alumni." }
+      ]
+    },
+    {
+      "id": 3,
+      "lang": "es-ES",
+      "items": [
+        { "id": 1, "titulo": "API - Ruta de aprendizaje", "descricao": "API - Contenido adaptado a tu ritmo." },
+        { "id": 2, "titulo": "API - Mentoría", "descricao": "API - Acompañamiento cercano en cada etapa." },
+        { "id": 3, "titulo": "API - Certificación", "descricao": "API - Reconocimiento al finalizar el curso." },
+        { "id": 4, "titulo": "API - Comunidad", "descricao": "API - Intercambio con otros estudiantes y egresados." }
+      ]
+    }
   ]
 }

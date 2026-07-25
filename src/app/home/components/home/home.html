@@ -1,76 +1,43 @@
-<section class="home">
-  {{ rastrearRenderizacao() }}
+<main class="home" aria-labelledby="home-main-title">
 
-  <!-- O Transloco só vai mostrar o h5 quando o JSON terminar de baixar -->
-  <ng-container *transloco="let t; loadingTpl: carregando">
-    <h5>
-      {{ t('home.greeting', { nome: nomeA(), qtd: qtdA() }) }}
-    </h5>
-  </ng-container>
+  <!-- ========================================== -->
+  // SEÇÃO A: DADOS FIXOS DO FRONTEND (TRANSLOCO)
+  <!-- ========================================== -->
+  <section class="home__about">
+    <!-- Exemplo de Interpolação Avançada com parâmetros (Greeting) -->
+    <p class="home__greeting">
+      {{ 'home.greeting' | transloco: { nome: userName, qtd: messageCount } }}
+    </p>
 
-  <!-- Template invisível/vazio ou com o seu componente de esqueleto/spinner -->
-  <ng-template #carregando>
-    <!-- Pode deixar vazio ou colocar uma tag de carregamento do seu Design System -->
-    <span></span>
-  </ng-template>
+    <h1 id="home-main-title" class="home__title">
+      {{ 'home.title' | transloco }}
+    </h1>
 
+    <p class="home__paragraph">
+      {{ 'home.aboutParagraph' | transloco }}
+    </p>
+  </section>
 
-  @if(homeDataService.ready()) {
-    <h5 class="home__title">{{ 'home.title' | transloco}}</h5>
-  }
+  <!-- ========================================== -->
+  // SEÇÃO B: CARDS DINÂMICOS DA API FAKE
+  <!-- ========================================== -->
+  <section class="home__api-section" aria-label="Produtos em Destaque">
+    @if (apiData(); as data) {
+      <!-- Container centralizado que envelopa os 4 mini cards -->
+      <div class="home__cards-container" role="group" aria-label="Lista de ofertas">
 
-   <!-- Placeholder neutro: nenhum texto/idioma aqui, só um esqueleto visual,
-       assim não corremos o risco de mostrar algo no idioma errado antes da
-       primeira resposta com sucesso da API. -->
-  @if (!homeDataService.ready()) {
-    <div class="home__title-skeleton"></div>
-  }
+        @for (item of data.items; track item.id) {
+          <article class="home__card">
+            <span class="home__card-id">#{{ item.id }}</span>
+            <h2 class="home__card-title">{{ item.titulo }}</h2>
+            <p class="home__card-description">{{ item.descricao }}</p>
+          </article>
+        }
 
-  @if (homeDataService.error()) {
-    <p class="home__error">{{ 'home.errorMessage' | transloco }}</p>
-  }
-
-  @if (homeDataService.loading()) {
-    <p class="home__loading">{{ 'home.loading' | transloco }}</p>
-  }
-
-  @if (!homeDataService.loading()) {
-    <div class="home__grid">
-      @for (item of homeDataService.items(); track $index) {
-        <article class="home__card">
-          <span class="home__card-number">{{ item.id }}</span>
-          <h6 class="home__card-title">{{ item.titulo }}</h6>
-          <p class="home__card-description">{{ item.descricao }}</p>
-        </article>
-      }
-    </div>
-  }
-
-  <ng-container *transloco="let t">
-  <div class="action-container">
-
-    <!-- Botão de Ação Interativo do seu Design System -->
-    <button
-      class="btn-danger"
-      [ariaLabel]="t('home.actions.deleteAccount', { nome: nomeA() })"
-      aria-describedby="desc-delete-account"
-      (click)="abrirModalConfirmacao()">
-      {{ t('home.actions.deleteBtnText') }}
-    </button>
-
-    <!-- Descrição Acessível Oculta Visualmente (.sr-only / Screen Reader Only) -->
-    <!-- Leitores de tela lerão este parágrafo imediatamente após ler o label do botão -->
-    <span id="desc-delete-account" class="sr-only">
-      {{ t('home.actions.deleteWarning') }}
-    </span>
-
-  </div>
-</ng-container>
-
-    <!-- Parágrafo fixo do front (não vem da API). Mesma regra do h5: só
-       aparece depois que os dados da chamada HTTP já estiverem na tela,
-       para manter idioma da tela e idioma dos dados sempre sincronizados. -->
-  @if (homeDataService.ready()) {
-    <p class="home__about">{{ 'home.aboutParagraph' | transloco }}</p>
-  }
-</section>
+      </div>
+    } @else {
+      <!-- Feedback visual de carregamento acessível enquanto a API responde -->
+      <p class="home__loading" role="status">{{ 'home.loading' | transloco }}</p>
+    }
+  </section>
+</main>

@@ -1,0 +1,19 @@
+{
+  "header": {
+    "brand": "Logo",
+    "languageLabel": "Idioma",
+    "simulateError": "Simular error"
+  },
+  "home": {
+    "aboutParagraph": "Nuestra institución valora el aprendizaje continuo y el intercambio de experiencias entre alumnos, mentores y profesionales del mercado. Buscamos ofrecer un ambiente estructurado, con contenido actualizado y apoyo cercano en cada etapa del recorrido. Creemos que una formación de calidad se construye con práctica constante, acompañamiento humano y una comunidad verdaderamente comprometida. Este texto es solo un ejemplo de relleno y no representa contenido real de la aplicación.",
+    "title": "Conoce a continuación lo que nuestra institución educativa ofrece:",
+    "errorMessage": "No fue posible cargar los datos. Inténtalo de nuevo.",
+    "loading": "Cargando...",
+    "greeting": "Hola, {{nome}}. Tienes {{qtd}} mensajes.",
+    "actions": {
+      "deleteBtnText": "Eliminar Cuenta",
+      "deleteAccount": "Eliminar cuenta de {{nome}}",
+      "deleteWarning": "Aviso: Esta acción es permanente y borrará todo tu historial y datos financieros del sistema."
+    }
+  }
+}

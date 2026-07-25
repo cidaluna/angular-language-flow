@@ -1,7 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal, WritableSignal } from '@angular/core';
-import { TranslocoModule } from '@jsverse/transloco';
-import { HomeDataService } from './services/home-data.service';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { TranslocoModule, TranslocoService } from '@jsverse/transloco';
+import { LanguageService } from '../../../core/services/language.service';
+import { HomeApiService } from './services/home-api.service';
+import { switchMap } from 'rxjs';
+import { HomeItemsResponse } from './interfaces/home-item.interface';
 
 @Component({
   selector: 'app-home',
@@ -9,32 +12,38 @@ import { HomeDataService } from './services/home-data.service';
   imports: [CommonModule, TranslocoModule],
   templateUrl: './home.html',
   styleUrl: './home.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Home implements OnInit {
-  readonly homeDataService = inject(HomeDataService);
+  private homeService = inject(HomeApiService);
 
-  // DECLARAÇÃO E INICIALIZAÇÃO IMEDIATA (Padrão Angular 18)
-  readonly nomeA = signal<string>('Cida');
-  readonly qtdA = signal<number>(5);
+   // Signal para guardar os 4 mini cards vindos da API fake
+  protected apiData = signal<HomeItemsResponse | null>(null);
+
+  // Exemplo de variáveis para passar para os parâmetros do Transloco (greeting)
+  protected userName: string = 'Cida Luna';
+  protected messageCount: number = 5;
 
   ngOnInit(): void {
-    // Carrega já no idioma commitado (o que veio do localStorage, ou pt-BR).
-    this.homeDataService.load();
+    this.loadScreenData();
   }
 
-  abrirModalConfirmacao() {
-    // teste
+
+  private loadScreenData(): void {
+    console.log(":: [Home] método loadScreenData");
+    this.homeService.getHomeItems().subscribe({
+      next: (response) => {
+        this.apiData.set(response);
+        console.log(':: [Home] next com sucesso');
+      },
+      error: (err) => {
+        console.error(':: [Home] error com:', err);
+      }
+    });
   }
 
-   // 🕵️‍♂️ RASTREADOR 1: Dispara a cada ciclo de verificação do Angular
+  // RASTREADOR 1: Dispara a cada ciclo de verificação do Angular
   ngDoCheck(): void {
-    console.log(' [Ciclo de Vida] Home Component verificado pelo Change Detection!');
+    console.log(':: [Ciclo de Vida] Home Component verificado pelo Change Detection!');
   }
 
-  // 🕵️‍♂️ RASTREADOR 2: Método chamado direto no HTML para flagrar reavaliações
-  rastrearRenderizacao(): string {
-    console.warn('⚠️ [Template] O HTML do Home Component foi renderizado/reavaliado novamente!');
-    return ''; // Retorna string vazia para não quebrar o layout
-  }
 }

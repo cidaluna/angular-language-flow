@@ -1,42 +1,39 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { TranslocoService } from '@jsverse/transloco';
-import { LocalStorageService } from './local-storage.service';
-import { AppLanguage, DEFAULT_LANGUAGE } from '../../home/components/home/interfaces/language.type';
 
-const STORAGE_KEY = 'app-language';
-
-/**
- * Adapter sobre o TranslocoService (mesmo padrão que você já usa em outros
- * projetos): nenhum componente importa o Transloco diretamente, todos
- * conversam com este service.
- *
- * O ponto importante aqui é que `commit()` é o ÚNICO lugar que muda o
- * idioma "de verdade" (localStorage + Transloco + signal). Ele só deve ser
- * chamado depois que a chamada HTTP relacionada já teve sucesso — é isso
- * que impede a tela de ficar bilíngue.
- */
 @Injectable({ providedIn: 'root' })
 export class LanguageService {
-  private readonly translocoService = inject(TranslocoService);
-  private readonly storage = inject(LocalStorageService);
+  private translocoService = inject(TranslocoService);
 
-  /** Idioma efetivamente aplicado (persistido + refletido no Transloco). */
-  readonly activeLang = signal<AppLanguage>(this.readFromStorage());
+  // Signal público que guarda o idioma ativo na tela (Começa com o padrão do Transloco)
+  //public activeLang = signal<string>(this.translocoService.getActiveLang());
 
-  constructor() {
-    // garante que o Transloco nasce alinhado com o valor salvo (ou o padrão)
-    this.translocoService.setActiveLang(this.activeLang());
+
+  // O Signal começa sem valor fixo, pois ele aguardará estritamente a API responder
+  public activeLang = signal<string>('pt-BR');
+
+
+  /**
+   * Força a aplicação inteira a adotar o idioma determinado pela API
+   */
+  initializeApplicationLanguage(apiLang: string | null | undefined): void {
+    console.log(":: [Language Service] método initializeApplicationLanguage");
+    // REGRA DE NEGÓCIO: Se a API falhar, retornar null ou undefined, o fallback rígido é pt-BR
+    const definitiveLang = apiLang ? apiLang.trim() : 'pt-BR';
+
+    // Atualiza o Transloco e o Signal do Dropdown no mesmo milissegundo
+    this.translocoService.setActiveLang(definitiveLang);
+    this.activeLang.set(definitiveLang);
   }
 
-  commit(lang: AppLanguage): void {
-    //localStorage.setItem(STORAGE_KEY, lang);
-    this.storage.set(STORAGE_KEY, lang);
-    this.translocoService.setActiveLang(lang);
-    this.activeLang.set(lang);
-  }
 
-  private readFromStorage(): AppLanguage {
-    const stored = this.storage.get<AppLanguage>(STORAGE_KEY);
-    return stored ?? DEFAULT_LANGUAGE;
+
+  /**
+   * Método usado caso o usuário mude manualmente o idioma no Dropdown do Header
+   */
+  changeLanguage(langCode: string): void {
+    console.log("::[Language Service] método changeLanguage com: ", langCode);
+    this.translocoService.setActiveLang(langCode);
+    this.activeLang.set(langCode);
   }
 }

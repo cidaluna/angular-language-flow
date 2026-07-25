@@ -1,9 +1,8 @@
 /**
  * Fake API simples (Express) para o teste de i18n + HTTP.
- * Não usamos o json-server "puro" porque ele não sabe ler o header
- * Accept-Language, e é exatamente esse comportamento que precisamos simular.
+ * Adaptado para servir a estrutura unificada de "homeItems".
  *
- * Rodar com: node server/server.js
+ * Rodar com: npm run server (via script criado no package.json)
  * Requer:    npm install express cors
  */
 const express = require('express');
@@ -15,24 +14,35 @@ const app = express();
 app.use(cors());
 
 const DB_PATH = path.join(__dirname, 'db.json');
-const DEFAULT_LANG = 'pt-BR';
 
-app.get('/home-items', (req, res) => {
-  // Toggle de teste: chamando /home-items?simulateError=true força um 500.
-  // É isso que o checkbox "Simular erro" do header do Angular usa.
+// CORREÇÃO: Alinhando a rota com a chave do seu db.json e a chamada do Angular
+app.get('/apiHomeItems', (req, res) => {
+
+  // Mantém o seu Toggle de teste para o checkbox "Simular erro" do Angular
   if (req.query.simulateError === 'true') {
     return res.status(500).json({ message: 'Erro simulado para fins de teste.' });
   }
 
-  const lang = req.header('Accept-Language') || DEFAULT_LANG;
-  const db = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
-  const items = db[lang] ?? db[DEFAULT_LANG];
+  try {
+    // Lê o seu arquivo db.json atualizado
+    const dbData = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
 
-  // pequeno atraso para simular latência real de rede
-  setTimeout(() => res.status(200).json(items), 400);
+    // Captura o array de dentro da chave "apiHomeItems"
+    const homeItemsResponse = dbData.apiHomeItems || [];
+
+    // Pequeno atraso para simular latência real de rede e ver o Loader piscando
+    setTimeout(() => {
+      res.status(200).json(homeItemsResponse);
+    }, 400);
+
+  } catch (error) {
+    console.error(':: [Server Error] Falha ao ler o arquivo db.json:', error);
+    res.status(500).json({ message: 'Erro interno ao processar o banco de dados fake.' });
+  }
 });
 
 const PORT = 3000;
 app.listen(PORT, () => {
-  console.log(`Fake API rodando em http://localhost:${PORT}/home-items`);
+  // Atualizado o log para refletir a nova rota padrão do ecossistema do seu app
+  console.log(`:: [Server] Fake API ativa rodando em http://localhost:${PORT}/apiHomeItems`);
 });
