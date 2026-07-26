@@ -1,10 +1,9 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
 
-import { HomeItem, HomeItemsResponse } from '../../home/interfaces/home-item.interface';
-import { AppLanguage } from '../../home/interfaces/language.type';
+import { HomeItemsResponse } from '../../home/interfaces/home-item.interface';
 import { LanguageService } from '../../../../core/services/language.service';
-import { firstValueFrom, map, Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 
 /**
  * Orquestra o ciclo: chama a fake API já com o idioma pretendido no header
@@ -18,8 +17,7 @@ export class HomeApiService {
   private readonly baseUrl = 'http://localhost:3000/apiHomeItems';
 
   getHomeItems(): Observable<HomeItemsResponse> {
-    // Captura o idioma que está ativo no momento (vindo do dropdown ou do estado inicial)
-    const currentLang = this.languageService.activeLang();
+    const currentLang = this.languageService.activeLang(); // Começa como pt-BR
 
     // Injeta o idioma ativo diretamente no header da requisição HTTP
     const headers = new HttpHeaders({
@@ -31,26 +29,29 @@ export class HomeApiService {
     // Faz o GET na lista inteira de apiHomeItems e filtra no Frontend
     return this.http.get<HomeItemsResponse[]>(this.baseUrl, { headers }).pipe(
       map((allHomeItems: HomeItemsResponse[]) => {
-        // 1. Tenta encontrar o objeto que possui o idioma ativo no momento
+        // Validação de segurança: se a resposta do banco vier vazia
+        if (!allHomeItems || allHomeItems.length === 0) {
+          throw new HttpErrorResponse({ status: 404, statusText: 'Not Found' });
+        }
+
+ // Tenta buscar no array o bloco correspondente ao idioma enviado no header
         let matchedData = allHomeItems.find(item => item.lang === currentLang);
 
-        // 2. REGRA DE NEGÓCIO / FALLBACK: Se não achar o idioma atual ou o campo 'lang' estiver omitido,
-        // força o sistema a buscar e adotar o objeto correspondente ao 'pt-BR'
+        // REQUISITO: Se não encontrar o idioma ou o campo 'lang' estiver omitido, aplica o fallback para pt-BR
         if (!matchedData) {
-          console.warn(`:: [Home Api Service][Language Fallback]: Idioma '${currentLang}' não encontrado ou omitido na API. Aplicando 'pt-BR'.`);
           matchedData = allHomeItems.find(item => item.lang === 'pt-BR');
         }
 
-        // 3. Segurança extrema: Se nem o pt-BR existir por algum erro no db.json, evita que o app quebre
+        // Se houver uma falha cadastral grave no db.json e nem o pt-BR existir, lança erro 500
         if (!matchedData) {
-          return {
-            id: 0,
-            lang: 'pt-BR',
-            items: []
-          };
+          throw new HttpErrorResponse({ status: 500, statusText: 'Missing Default Template' });
         }
 
-        // Retorna apenas o objeto do idioma correto (ou o pt-BR) para o componente ler
+        // Garante que se o campo 'lang' interno vier nulo ou omitido, ele assume o fallback de cabeçalho
+        if (!matchedData.lang) {
+          matchedData.lang = 'pt-BR';
+        }
+
         return matchedData;
       })
     );

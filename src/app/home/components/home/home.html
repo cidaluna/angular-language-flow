@@ -1,8 +1,7 @@
 <main class="home" aria-labelledby="home-main-title">
 
-  <!-- ========================================== -->
-  // SEÇÃO A: DADOS FIXOS DO FRONTEND (TRANSLOCO)
-  <!-- ========================================== -->
+  <!-- Toda a visualização fica blindada aguardando o dado da API chegar -->
+  @if (apiData(); as data) {
   <section class="home__about">
     <!-- Exemplo de Interpolação Avançada com parâmetros (Greeting) -->
     <p class="home__greeting">
@@ -18,11 +17,7 @@
     </p>
   </section>
 
-  <!-- ========================================== -->
-  // SEÇÃO B: CARDS DINÂMICOS DA API FAKE
-  <!-- ========================================== -->
   <section class="home__api-section" aria-label="Produtos em Destaque">
-    @if (apiData(); as data) {
       <!-- Container centralizado que envelopa os 4 mini cards -->
       <div class="home__cards-container" role="group" aria-label="Lista de ofertas">
 
@@ -35,9 +30,9 @@
         }
 
       </div>
+  </section>
     } @else {
       <!-- Feedback visual de carregamento acessível enquanto a API responde -->
       <p class="home__loading" role="status">{{ 'home.loading' | transloco }}</p>
     }
-  </section>
 </main>

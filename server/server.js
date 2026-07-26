@@ -33,7 +33,7 @@ app.get('/apiHomeItems', (req, res) => {
     // Pequeno atraso para simular latência real de rede e ver o Loader piscando
     setTimeout(() => {
       res.status(200).json(homeItemsResponse);
-    }, 400);
+    }, 3000);
 
   } catch (error) {
     console.error(':: [Server Error] Falha ao ler o arquivo db.json:', error);
