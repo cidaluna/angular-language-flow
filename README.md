@@ -193,34 +193,49 @@ Para manter a aplicação performática e o consumo de memória controlado, esta
 Seguindo os padrões de arquitetura corporativa para o Angular 18, a internacionalização é tratada como um serviço de infraestrutura global dentro de `core/`. Abaixo está a árvore de diretórios focada no ecossistema do Transloco e NGXS, demonstrando como ela se acopla aos seletores e interceptores globais já existentes na aplicação:
 
 ```text
-src/
-├── app/
-│   ├── core/
-│   │   ├── interceptors/
-│   │   │   ├── global.interceptor.ts         # Interceptor global existente
-│   │   │   └── i18n-http.interceptor.ts      # NOVO: Injeta header de idioma nas requisições do BFF
-│   │   ├── services/
-│   │   │   └── loader.service.ts             # Loader global existente (exibe/esconde spinner)
-│   │   └── i18n/                             # NOVO: Módulo isolado de Internacionalização
-│   │       ├── constants/
-│   │       │   └── i18n.constants.ts         # Definição única de idiomas suportados, chaves e tipos
-│   │       ├── helpers/
-│   │       │   └── i18n-test.helper.ts       # Utilitário de Mock para testes unitários (.spec)
-│   │       ├── state/
-│   │       │   ├── i18n.actions.ts           # Actions do NGXS para troca de idioma
-│   │       │   ├── i18n.state.ts             # Estado do NGXS que gerencia o fluxo com o BFF Java
-│   │       │   └── i18n.state.spec.ts        # Testes unitários do fluxo de transição de idioma
-│   │       └── transloco-loader.ts           # Loader do Transloco configurado com as constantes
-│   └── store/                                # Gerenciamento de Estados Globais Existentes
-│       ├── user/
-│       │   └── user.state.ts                 # Estado do usuário logado
-│       └── preferences/
-│           └── preferences.state.ts          # Estado de preferências do sistema
-└── assets/
-    └── i18n/                                 # Dicionários de tradução exclusivos do Front-end
-        ├── pt-BR.json
-        ├── en.json
-        └── es.json
+angular-language-flow/
+├── node_modules/                   # Dependências instaladas do ecossistema Node.js
+├── public/                         # Pasta de arquivos públicos estáticos do Angular moderno
+│   ├── i18n/                       # Dicionários de tradução (Arquivos JSON locais)
+│   │   ├── en-US.json              # Chaves e textos traduzidos para Inglês (US)
+│   │   ├── es-ES.json              
+│   │   └── pt-BR.json              
+│   └── favicon.ico                 
+├── server/                         # Ambiente de mock da API corporativa para simular o Backend
+│   ├── db.json                     # Banco de dados fake com dados dinâmicos internacionalizados
+│   └── server.js                   # Script Node.js que serve a API e simula latência/erros
+└── src/                            
+    └── app/                        
+        ├── core/                   # Núcleo da aplicação (Lógicas globais, interceptors e serviços)
+        │   ├── error/              # Tratamento e mapeamento global de falhas de rede
+        │   ├── i18n/               # Infraestrutura e engine de internacionalização
+        │   │   ├── transloco-loader.ts # Serviço HTTP responsável por buscar os JSONs locais
+        │   │   └── transloco.config.js # Configuração central da CLI e do extrator de chaves
+        │   ├── interceptors/       # Interceptadores de tráfego HTTP global
+        │   │   └── language-header.interceptor.ts # Injeta automaticamente o idioma reativo nos headers da API
+        │   ├── loader/             # Orquestração do estado visual de carregamento atômico
+        │   │   ├── loader/         # Componente visual do Loader de tela inteira
+        │   │   │   ├── loader.html
+        │   │   │   ├── loader.scss
+        │   │   │   ├── loader.spec.ts
+        │   │   │   └── loader.ts
+        │   │   ├── loader.interceptor.ts # Intercepta requisições HTTP para ligar/desligar o Loader de forma automatizada
+        │   │   └── loader.state.ts # Gerenciamento de estado reativo (NGXS/Signals) do Loader global
+        │   └── services/           
+        │       └── language.service.ts # Centraliza o Signal do idioma atual e expõe métodos de troca
+        ├── home\components\home/   
+        │   ├── interfaces/         
+        │   │   ├── home-item.interface.ts # Tipagem rígida para os dados dinâmicos da API
+        │   │   └── language.type.ts 
+        │   ├── services/           # Serviços de dados restritos à tela Home
+        │   │   └── home-api.service.ts # Consome os endpoints da API trazendo dados dinâmicos com cabeçalhos de idioma
+        │   ├── home.html           
+        │   ├── home.scss
+        │   ├── home.spec.ts
+        │   └── home.ts             # Componente reativo que consome os dados e gerencia o ciclo de vida
+        ├── app.config.ts           # Registro de provedores globais do Angular, HttpClient e Transloco
+        ├── app.html                # Template base do Angular (Injeta o router-outlet e o loader global)
+        └── app.routes.ts           # Mapeamento e guarda de rotas da aplicação
 ```
 
 ---
