@@ -226,25 +226,53 @@ src/
 ```
 
 ---
-## Responsabilidades
 
-| Camada | Responsabilidade |
-|--------|------------------|
-| Header | Capturar a intenção do usuário |
-| LanguageFacade | Orquestrar todo o fluxo |
-| LanguageApiService | Comunicação com o BFF |
-| LanguageStorageService | Persistência do idioma |
-| LanguageState (NGXS) | Estado da aplicação |
-| Transloco | Traduções estáticas do frontend |
-| Interceptor | Enviar `Accept-Language` automaticamente |
+### 📐 O Fluxo de Dados Ponta a Ponta
 
-## Como adicionar um novo idioma
+Abaixo está o mapa visual de como o sistema se comporta de forma totalmente reativa a partir da interação do usuário no dropdown do cabeçalho:
 
-1. Criar o arquivo em `assets/i18n`.
-2. Atualizar `supported-locales.ts`.
-3. Atualizar `AppLocale`.
-4. Garantir suporte no BFF.
-5. Adicionar testes unitários.
+```text
+[ Dropdown Header ]  ──(Ação manual do usuário)──> Dispara LanguageService.changeLanguage()
+         │
+         ▼
+[ LanguageService ]  ──(Fonte da Verdade)────────> Atualiza o activeLang: WritableSignal
+         │
+         ▼
+[ effect() na Home ] ──(Radar Reativo Ativo)─────> Detecta mudança no Signal e aciona a API
+         │
+         ▼
+[ HttpClient.get ]   ──(Interceptor Acted)──────> loaderInterceptor dispara [Loader] Show no NGXS
+         │                                         ↳ 🛑 Tela bloqueada c/ Overlay e Spinner
+         ▼
+[ switchMap (RxJS) ] ──(Barreira Bloqueante)─────> 1. Recebe dados 200 da API Fake
+         │                                         2. Segura o loader na tela
+         │                                         3. Baixa o arquivo JSON do Transloco (public/i18n/)
+         ▼
+  [ Fluxo Concluído ] ──(Desbloqueio Atômico)─────> Transloco renderiza textos fixos + API exibe os cards
+                                                   ↳ 🟢 Interceptor fecha o Loader Global
+```
+
+---
+
+## 🧱 Divisão de Responsabilidades (SOLID & Clean Code)
+
+Para garantir escalabilidade, aplicamos o **Princípio de Responsabilidade Única** onde cada arquivo atua de forma isolada e desacoplada:
+
+| Camada do Sistema | Responsabilidade Técnica | Motivo da Escolha Arquitetural |
+| :--- | :--- | :--- |
+| **`LanguageService`** | Estado Global do Idioma | Centraliza a "Fonte da Verdade" usando um **Signal**. Impede loops infinitos isolando a gravação de dados da leitura de tela. |
+| **`HomeService`** | Consumo e *Sanity Check* | Injeta o idioma ativo diretamente no cabeçalho `Accept-Language`. Valida a saúde dos dados e força um erro `404/500` caso a API envie um corpo vazio (`[]`). |
+| **`HomeComponent`** | Orquestração Reativa | Usa o **`effect()`** no construtor como um radar. Ele se reativa sozinho toda vez que o idioma do dropdown muda, redesenhando a tela. |
+| **`loaderInterceptor`**| Controle de Tráfego Passivo | Monitora de forma automática o ciclo de vida das chamadas HTTP da aplicação, acionando o estado global do loader no **NGXS**. |
+| **`errorInterceptor`** | Contingência Global | Protege o usuário contra falhas do servidor. Caso ocorra um erro de rede ou o `HomeService` lance uma exceção, ele assume a navegação para `/error`. |
+
+---
+
+### 🏆 Por que esta solução é considerada válida?
+
+1. **Evita o uso do `APP_INITIALIZER`:** Inicializadores de boot travam o carregamento total do ecossistema e impedem o **Componente do Loader** de nascer no HTML antes da chamada começar. Delegar o fluxo para o `effect` da Home permite que a tela de carregamento exista fisicamente de forma acessível.
+2. **Encadeamento Bloqueante com `switchMap`:** O `loaderInterceptor` monitora a requisição HTTP. Ao estendermos o fluxo com o `switchMap` para aguardar também o `selectTranslation()` do Transloco, o interceptor entende que a tarefa só terminou quando **ambos** os arquivos (o dado do banco + o JSON do front) estão baixados. O loader só sai da tela quando a tradução for 100% atômica.
+3. **Imunidade a Telas em Branco:** Caso o servidor dê um status `200 OK` incompleto ou sem dados, o *Sanity Check* do serviço quebra o fluxo de forma segura no `map` do RxJS, ativando as rotas de contingência automaticamente sem congelar a aplicação em estados de carregamento infinito.
 
 ---
 ### 🛠️ Ferramentas de Auditoria e Qualidade de Código (i18n)
@@ -264,3 +292,98 @@ Por consequência, o comando de auditoria opera de forma restritiva:
 
 1. **Fase de Desenvolvimento (Local):** O desenvolvedor deve rodar `npm run i18n:find-missing` antes de commitar. O terminal listará exatamente quais chaves estão ausentes nos dicionários `en-US.json` ou `pt-BR.json`.
 2. **Fase de Integração (CI/CD):** A esteira executa o mesmo comando. Caso o relatório encontre assimetria entre os arquivos de idioma, o pipeline de build é **abortado imediatamente**, bloqueando o Pull Request até que as chaves reais sejam inseridas pelo desenvolvedor.
+
+---
+## 🚀 Como Adicionar um Novo Idioma na Aplicação (Guia de Expansão)
+
+O ecossistema de internacionalização desta aplicação foi arquitetado sob os princípios de **baixo acoplamento**, tornando o processo de adição de novas línguas (ex: Francês - `fr-FR`) extremamente simples, seguro e padronizado. 
+
+Qualquer desenvolvedor da equipe pode expandir o sistema seguindo rigorosamente os **3 passos** abaixo:
+
+---
+
+### 📂 Passo 1: Criar o Arquivo de Tradução do Frontend
+Navegue até o diretório `public/i18n/` e crie o arquivo JSON utilizando o código longo do novo idioma (ex: `fr-FR.json`). Copie a estrutura de chaves existentes e insira as novas traduções fixas:
+
+```text
+public/
+└── i18n/
+    ├── pt-BR.json
+    ├── en-US.json
+    ├── es-ES.json
+    └── fr-FR.json      <-- 1. Novo arquivo criado aqui
+```
+
+---
+
+### 🎨 Passo 2: Atualizar a Interface e os Modificadores Globais
+Para manter a segurança de tipo do TypeScript e garantir que as telas reconheçam a nova opção, precisamos registrar o novo código em dois arquivos de infraestrutura:
+
+1. **No arquivo de contratos (`button.interface.ts` ou similar):**
+   Atualize o tipo literal para aceitar o novo código de idioma:
+   ```typescript
+   export interface HomeItemsResponse {
+     id: number;
+     lang: 'pt-BR' | 'en-US' | 'es-ES' | 'fr-FR'; // 2. Adicione o novo literal aqui
+     items: Array<{ id: number; titulo: string; descricao: string; }>;
+   }
+   ```
+
+2. **No arquivo de configuração do app (`app.config.ts`):**
+   Adicione o novo código no array de idiomas disponíveis do Transloco:
+   ```typescript
+   provideTransloco({
+     config: {
+       availableLangs: ['pt-BR', 'en-US', 'es-ES', 'fr-FR'], // 3. Adicione aqui
+       defaultLang: 'pt-BR',
+       reRenderOnLangChange: true,
+     },
+     loader: TranslocoHttpLoader
+   })
+   ```
+
+3. **No componente do menu (`header.component.ts`):**
+   Insira a nova opção no array para que ela apareça automaticamente no Dropdown do cabeçalho:
+   ```typescript
+   protected languages = [
+     { code: 'pt-BR', label: 'Português (Brasil)' },
+     { code: 'en-US', label: 'English (US)' },
+     { code: 'es-ES', label: 'Español' },
+     { code: 'fr-FR', label: 'Français' } // 4. Adicione aqui
+   ];
+   ```
+
+---
+
+### ⚙️ Passo 3: Alimentar a API Mock (Banco de Dados Fake)
+Abra o seu arquivo `db.json` no backend fake e adicione o novo bloco de dados dinâmicos correspondente dentro do array `"homeItems"`. 
+
+Certifique-se de preencher o campo `"lang"` com o valor exato que você registrou no frontend:
+
+```json
+{
+  "homeItems": [
+    {
+      "id": 4,
+      "lang": "fr-FR",
+      "items": [
+        { "id": 1, "titulo": "API - Parcours d'études", "descricao": "API - Contenu adapté à votre rythme." },
+        { "id": 2, "titulo": "API - Mentorat", "descricao": "API - Un accompagnement de proche à chaque étape." },
+        { "id": 3, "titulo": "API - Certificat", "descricao": "API - Reconnaissance à la fin du cours." },
+        { "id": 4, "titulo": "API - Communauté", "descricao": "API - Échange avec d'autres étudiants et anciens." }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+### 🎯 Pronto! O que acontece por baixo dos panos?
+Graças à nossa **arquitetura orientada a Signals e Efeitos**, você **não precisa alterar nenhuma linha de código lógico** na página `Home`. 
+
+Assim que o usuário selecionar "Français" no dropdown:
+1. O `LanguageService` atualiza o sinal reativo para `'fr-FR'`.
+2. O `effect()` da Home detecta a mudança e ativa o loader global.
+3. O `HomeService` faz o `HttpClient.get()` injetando o idioma no header.
+4. O `switchMap` captura o novo bloco do `db.json`, baixa o arquivo `fr-FR.json` e redesenha a tela perfeitamente sem nenhuma piscada bilingue!
