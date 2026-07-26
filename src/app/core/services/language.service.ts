@@ -13,11 +13,11 @@ export class LanguageService {
    */
   changeLanguage(langCode: string): void {
     if (!langCode) return;
-    console.log("::[Language Service] método changeLanguage com: ", langCode);
     const sanitizedLang = langCode.trim();
 
     // Atualiza o Transloco e o Signal do Dropdown
     this.translocoService.setActiveLang(sanitizedLang);
     this.activeLang.set(sanitizedLang);
+    console.log("::[Language Service] método changeLanguage com activeLang: ", sanitizedLang);
   }
 }

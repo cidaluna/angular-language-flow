@@ -24,17 +24,18 @@ export class HomeApiService {
       'Accept-Language': currentLang
     });
 
-    console.log(":: [Home Api Service] método getHomeItems com o currentLang/activeLang: ", currentLang)
+    console.log(":: [Home Api Service] método getHomeItems API com o currentLang/activeLang: ", currentLang)
 
     // Faz o GET na lista inteira de apiHomeItems e filtra no Frontend
     return this.http.get<HomeItemsResponse[]>(this.baseUrl, { headers }).pipe(
       map((allHomeItems: HomeItemsResponse[]) => {
         // Validação de segurança: se a resposta do banco vier vazia
         if (!allHomeItems || allHomeItems.length === 0) {
+          console.log(":: [Home Api Service] método getHomeItems API retornou erro com status 0 ou 404")
           throw new HttpErrorResponse({ status: 404, statusText: 'Not Found' });
         }
 
- // Tenta buscar no array o bloco correspondente ao idioma enviado no header
+        // Tenta buscar no array o bloco correspondente ao idioma enviado no header
         let matchedData = allHomeItems.find(item => item.lang === currentLang);
 
         // REQUISITO: Se não encontrar o idioma ou o campo 'lang' estiver omitido, aplica o fallback para pt-BR
@@ -44,6 +45,7 @@ export class HomeApiService {
 
         // Se houver uma falha cadastral grave no db.json e nem o pt-BR existir, lança erro 500
         if (!matchedData) {
+          console.log(":: [Home Api Service] método getHomeItems API com falha no db.json e o pt-BR não existe");
           throw new HttpErrorResponse({ status: 500, statusText: 'Missing Default Template' });
         }
 
@@ -52,6 +54,7 @@ export class HomeApiService {
           matchedData.lang = 'pt-BR';
         }
 
+        console.log(":: [Home Api Service] método getHomeItems API com idioma = ", matchedData);
         return matchedData;
       })
     );

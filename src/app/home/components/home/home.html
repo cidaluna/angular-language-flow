@@ -12,27 +12,33 @@
       {{ 'home.title' | transloco }}
     </h1>
 
+    <button id="home-main-btn" class="home__btn">
+      Teste Salvar
+    </button>
+
+    <section class="home__api-section" aria-label="Produtos em Destaque">
+      <!-- Container centralizado que envelopa os 4 mini cards -->
+      <div class="home__cards-container" role="group" aria-label="Lista de ofertas">
+
+        @for (item of data.items; track item.id) {
+        <article class="home__card">
+          <span class="home__card-id">#{{ item.id }}</span>
+          <h2 class="home__card-title">{{ item.titulo }}</h2>
+          <p class="home__card-description">{{ item.descricao }}</p>
+        </article>
+        }
+
+      </div>
+    </section>
+
     <p class="home__paragraph">
       {{ 'home.aboutParagraph' | transloco }}
     </p>
   </section>
 
-  <section class="home__api-section" aria-label="Produtos em Destaque">
-      <!-- Container centralizado que envelopa os 4 mini cards -->
-      <div class="home__cards-container" role="group" aria-label="Lista de ofertas">
 
-        @for (item of data.items; track item.id) {
-          <article class="home__card">
-            <span class="home__card-id">#{{ item.id }}</span>
-            <h2 class="home__card-title">{{ item.titulo }}</h2>
-            <p class="home__card-description">{{ item.descricao }}</p>
-          </article>
-        }
-
-      </div>
-  </section>
-    } @else {
-      <!-- Feedback visual de carregamento acessível enquanto a API responde -->
-      <p class="home__loading" role="status">{{ 'home.loading' | transloco }}</p>
-    }
+  } @else {
+  <!-- Feedback visual de carregamento acessível enquanto a API responde -->
+  <p class="home__loading" role="status">{{ 'home.loading' | transloco }}</p>
+  }
 </main>

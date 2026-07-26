@@ -16,6 +16,7 @@ export const loaderInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     finalize(() => {
+      console.log(":: [Loader Interceptor] método loaderInterceptor finalize vai chamar Action HideLoader");
       // Dispara a ação para ocultar qdo a requisição terminar (sucesso ou erro)
       store.dispatch(new HideLoader());
     })
