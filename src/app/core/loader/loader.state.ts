@@ -24,6 +24,7 @@ export class LoaderState {
   // Seletor reativo para os componentes escutarem o estado
   @Selector()
   static isLoading(state: LoaderStateModel): boolean {
+    console.log(":: [Loader State] com state: ", state);
     return state.isLoading;
   }
 
