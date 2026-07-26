@@ -1,11 +1,11 @@
 # Angular Language Flow
 Projeto Angular Language Flow.
 
-### 📋 Pré-Requisitos
+## 📋 Pré-Requisitos
 - Node.js 21.2.0
 - Angular CLI 21.2.0
 
-### 🚀 Como rodar a aplicação
+## 🚀 Como rodar a aplicação
 
 1. **Clone o repositório:**
   ```bash
@@ -37,7 +37,7 @@ Projeto Angular Language Flow.
     node server.js
    ```
 
-### 🗺️ Instalação da lib jsverse/transloco
+## 🗺️ Instalação da lib jsverse/transloco
 
 Para configurar a biblioteca no ambiente, execute o comando interativo do Angular CLI no terminal da raiz do projeto:
 
@@ -51,12 +51,11 @@ Ao executar o comando, responda às perguntas do prompt exatamente com as defini
 *   **Are you using Server-Side Rendering (SSR)?** `No`
 
 ---
-
-### ⚙️ Configuração Estrutural (Angular 18)
+## ⚙️ Configuração Estrutural (Angular 18)
 
 O processo de instalação automatizado cria o arquivo de carregamento e injeta a configuração global. Certifique-se de que os arquivos gerados seguem o padrão de arquitetura baseada em funções (*Standalone App*) do Angular 18:
 
-#### 1. Loader de Tradução (`src/app/transloco-loader.ts`)
+### 1. Loader de Tradução (`src/app/transloco-loader.ts`)
 Este serviço é responsável por buscar os arquivos JSON locais sob demanda:
 
 ```typescript
@@ -74,7 +73,7 @@ export class TranslocoHttpLoader implements TranslocoLoader {
 }
 ```
 
-#### 2. Registro Global (`src/app/app.config.ts`)
+### 2. Registro Global (`src/app/app.config.ts`)
 O Transloco é registrado na inicialização da aplicação através do bloco `provideTransloco`:
 
 ```typescript
@@ -99,7 +98,7 @@ export const appConfig: ApplicationConfig = {
 };
 ```
 ---
-### 📊 Guia de Boas Práticas
+## 📊 Guia de Boas Práticas
 
 A tabela abaixo define os padrões de desenvolvimento para a internacionalização do ecossistema. Siga estas diretrizes para garantir a melhor performance e consistência de código:
 
@@ -115,11 +114,11 @@ A tabela abaixo define os padrões de desenvolvimento para a internacionalizaç�
 ⚠️ **Aviso de Sincronismo:** Toda nova chave criada nos arquivos `.json` deve ser adicionada simultaneamente em `pt-BR.json` e `en-US.json` para evitar erros de renderização ou chaves em branco (*missing translation*) em produção.
 
 ---
-### 🧩 Uso Avançado: Integração com Design System e Tags Semânticas
+## 🧩 Uso Avançado: Integração com Design System e Tags Semânticas
 
 Para utilizar a diretiva estrutural `*transloco="let t"` sem injetar tags HTML adicionais (como `<div>`) que possam quebrar o layout, as regras de CSS do seu Design System ou a semântica estrutural (`<header>`, `<footer>`), utilize a tag lógica **`<ng-container>`**. O Angular remove esta tag do DOM final durante a renderização.
 
-#### 1. Uso Semântico Estrutural (Sem injetar DIVs no DOM)
+### 1. Uso Semântico Estrutural (Sem injetar DIVs no DOM)
 Ideal para encapsular blocos inteiros mantendo a fidelidade das tags nativas e componentes customizados:
 
 ```html
@@ -132,7 +131,7 @@ Ideal para encapsular blocos inteiros mantendo a fidelidade das tags nativas e c
 </header>
 ```
 
-#### 2. Passando Traduções para Inputs de Componentes do Design System
+### 2. Passando Traduções para Inputs de Componentes do Design System
 Se os componentes do seu Design System recebem texto via propriedades (`@Input`), você pode invocar a função `t()` diretamente no mapeamento de propriedade (Property Binding) do Angular:
 
 ```html
@@ -151,17 +150,16 @@ Se os componentes do seu Design System recebem texto via propriedades (`@Input`)
 </ng-container>
 ```
 
-#### 3. Uso Direto sem Diretiva Estrutural (Pipe Alternativo)
+### 3. Uso Direto sem Diretiva Estrutural (Pipe Alternativo)
 Caso precise traduzir uma propriedade única em um componente isolado do Design System e não queira criar um bloco `<ng-container>`, você pode usar o pipe `| transloco` diretamente na propriedade:
 
 ```html
-<ds-input 
+<input 
   [label]="'form.name' | transloco" 
-  [errorMessage]="'form.required' | transloco">
-</ds-input>
+  [errorMessage]="'form.required' | transloco" />
 ```
 ---
-### 📏 Linha de Corte: Pipe (`| transloco`) vs Diretiva (`*transloco`)
+## 📏 Linha de Corte: Pipe (`| transloco`) vs Diretiva (`*transloco`)
 
 Para manter a aplicação performática e o consumo de memória controlado, estabelecemos a seguinte métrica de corte para revisões de código (PRs):
 
@@ -226,8 +224,7 @@ src/
 ```
 
 ---
-
-### 📐 O Fluxo de Dados Ponta a Ponta
+## 📐 O Fluxo de Dados Ponta a Ponta
 
 Abaixo está o mapa visual de como o sistema se comporta de forma totalmente reativa a partir da interação do usuário no dropdown do cabeçalho:
 
@@ -248,12 +245,11 @@ Abaixo está o mapa visual de como o sistema se comporta de forma totalmente rea
          │                                         2. Segura o loader na tela
          │                                         3. Baixa o arquivo JSON do Transloco (public/i18n/)
          ▼
-  [ Fluxo Concluído ] ──(Desbloqueio Atômico)─────> Transloco renderiza textos fixos + API exibe os cards
+[ Fluxo Concluído ] ──(Desbloqueio Atômico)─────> Transloco renderiza textos fixos + API exibe os cards
                                                    ↳ 🟢 Interceptor fecha o Loader Global
 ```
 
 ---
-
 ## 🧱 Divisão de Responsabilidades (SOLID & Clean Code)
 
 Para garantir escalabilidade, aplicamos o **Princípio de Responsabilidade Única** onde cada arquivo atua de forma isolada e desacoplada:
@@ -267,15 +263,14 @@ Para garantir escalabilidade, aplicamos o **Princípio de Responsabilidade Únic
 | **`errorInterceptor`** | Contingência Global | Protege o usuário contra falhas do servidor. Caso ocorra um erro de rede ou o `HomeService` lance uma exceção, ele assume a navegação para `/error`. |
 
 ---
-
-### 🏆 Por que esta solução é considerada válida?
+## 🏆 Por que esta solução é considerada válida?
 
 1. **Evita o uso do `APP_INITIALIZER`:** Inicializadores de boot travam o carregamento total do ecossistema e impedem o **Componente do Loader** de nascer no HTML antes da chamada começar. Delegar o fluxo para o `effect` da Home permite que a tela de carregamento exista fisicamente de forma acessível.
 2. **Encadeamento Bloqueante com `switchMap`:** O `loaderInterceptor` monitora a requisição HTTP. Ao estendermos o fluxo com o `switchMap` para aguardar também o `selectTranslation()` do Transloco, o interceptor entende que a tarefa só terminou quando **ambos** os arquivos (o dado do banco + o JSON do front) estão baixados. O loader só sai da tela quando a tradução for 100% atômica.
 3. **Imunidade a Telas em Branco:** Caso o servidor dê um status `200 OK` incompleto ou sem dados, o *Sanity Check* do serviço quebra o fluxo de forma segura no `map` do RxJS, ativando as rotas de contingência automaticamente sem congelar a aplicação em estados de carregamento infinito.
 
 ---
-### 🛠️ Ferramentas de Auditoria e Qualidade de Código (i18n)
+## 🛠️ Ferramentas de Auditoria e Qualidade de Código (i18n)
 
 Para garantir que nenhuma chave de internacionalização pendente, incorreta ou vazia seja enviada para os ambientes de homologação e produção, este projeto adota ferramentas de análise estática integradas ao ecossistema do Transloco. 
 
@@ -300,8 +295,6 @@ O ecossistema de internacionalização desta aplicação foi arquitetado sob os 
 
 Qualquer desenvolvedor da equipe pode expandir o sistema seguindo rigorosamente os **3 passos** abaixo:
 
----
-
 ### 📂 Passo 1: Criar o Arquivo de Tradução do Frontend
 Navegue até o diretório `public/i18n/` e crie o arquivo JSON utilizando o código longo do novo idioma (ex: `fr-FR.json`). Copie a estrutura de chaves existentes e insira as novas traduções fixas:
 
@@ -313,8 +306,6 @@ public/
     ├── es-ES.json
     └── fr-FR.json      <-- 1. Novo arquivo criado aqui
 ```
-
----
 
 ### 🎨 Passo 2: Atualizar a Interface e os Modificadores Globais
 Para manter a segurança de tipo do TypeScript e garantir que as telas reconheçam a nova opção, precisamos registrar o novo código em dois arquivos de infraestrutura:
@@ -353,8 +344,6 @@ Para manter a segurança de tipo do TypeScript e garantir que as telas reconheç
    ];
    ```
 
----
-
 ### ⚙️ Passo 3: Alimentar a API Mock (Banco de Dados Fake)
 Abra o seu arquivo `db.json` no backend fake e adicione o novo bloco de dados dinâmicos correspondente dentro do array `"homeItems"`. 
 
@@ -377,7 +366,6 @@ Certifique-se de preencher o campo `"lang"` com o valor exato que você registro
 }
 ```
 
----
 
 ### 🎯 Pronto! O que acontece por baixo dos panos?
 Graças à nossa **arquitetura orientada a Signals e Efeitos**, você **não precisa alterar nenhuma linha de código lógico** na página `Home`. 
