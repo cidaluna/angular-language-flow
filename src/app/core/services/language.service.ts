@@ -1,5 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
-import { TranslocoService } from '@jsverse/transloco';
+import { Injectable, signal } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class LanguageService {

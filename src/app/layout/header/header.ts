@@ -26,15 +26,6 @@ export class Header {
     if (selectElement) {
       // Altera o idioma globalmente através do serviço
       this.languageService.changeLanguage(selectElement.value);
-
-      // Opcional: Se você quiser que a Home recarregue os dados da API fake
-      // imediatamente na tela quando o usuário trocar o idioma no Dropdown,
-      // você pode disparar um evento aqui ou dar um window.location.reload()
     }
   }
-
-  // onSimulateErrorToggle(event: Event): void {
-  //   const checked = (event.target as HTMLInputElement).checked;
-  //   this.homeDataService.toggleSimulateError(checked);
-  // }
 }
