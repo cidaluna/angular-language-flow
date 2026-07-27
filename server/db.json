@@ -22,7 +22,7 @@
     },
     {
       "id": 3,
-      "lang": "es-ES",
+      "lang": "",
       "items": [
         { "id": 1, "titulo": "API - Ruta de aprendizaje", "descricao": "API - Contenido adaptado a tu ritmo." },
         { "id": 2, "titulo": "API - Mentoría", "descricao": "API - Acompañamiento cercano en cada etapa." },

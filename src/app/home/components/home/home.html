@@ -1,44 +1,56 @@
 <main class="home" aria-labelledby="home-main-title">
-
-  <!-- Toda a visualização fica blindada aguardando o dado da API chegar -->
-  @if (apiData(); as data) {
-  <section class="home__about">
-    <!-- Exemplo de Interpolação Avançada com parâmetros (Greeting) -->
-    <p class="home__greeting">
-      {{ 'home.greeting' | transloco: { nome: userName, qtd: messageCount } }}
-    </p>
-
-    <h1 id="home-main-title" class="home__title">
-      {{ 'home.title' | transloco }}
-    </h1>
-
-    <button id="home-main-btn" class="home__btn">
-      Teste Salvar
-    </button>
-
-    <section class="home__api-section" aria-label="Produtos em Destaque">
-      <!-- Container centralizado que envelopa os 4 mini cards -->
-      <div class="home__cards-container" role="group" aria-label="Lista de ofertas">
-
-        @for (item of data.items; track item.id) {
-        <article class="home__card">
-          <span class="home__card-id">#{{ item.id }}</span>
-          <h2 class="home__card-title">{{ item.titulo }}</h2>
-          <p class="home__card-description">{{ item.descricao }}</p>
-        </article>
-        }
-
-      </div>
-    </section>
-
-    <p class="home__paragraph">
-      {{ 'home.aboutParagraph' | transloco }}
-    </p>
-  </section>
-
-
-  } @else {
-  <!-- Feedback visual de carregamento acessível enquanto a API responde -->
-  <p class="home__loading" role="status">{{ 'home.loading' | transloco }}</p>
+  <!-- Toast não bloqueante: só aparece quando uma TROCA de idioma falha,
+       e a tela de baixo continua mostrando os dados anteriores válidos -->
+  @if (switchError(); as reason) {
+    <div class="home__switch-error" role="alert">
+      <p>{{ 'home.switchError.title' | transloco }}</p>
+      <button type="button" (click)="dismissSwitchError()">
+        {{ 'home.switchError.dismiss' | transloco }}
+      </button>
+    </div>
   }
+
+  @if (errorMessage(); as reason) {
+    <div class="home__error" role="alert">
+      <p class="home__error-message">
+        {{ 'home.error.title' | transloco }}
+      </p>
+      <button
+        id="home-error-retry-btn"
+        class="home__error-retry"
+        type="button"
+        (click)="retry()">
+        {{ 'home.error.retry' | transloco }}
+      </button>
+    </div>
+  } @else if (successData(); as data) {
+    <section class="home__about">
+      <p class="home__greeting">
+        {{ 'home.greeting' | transloco: { nome: userName, qtd: messageCount } }}
+      </p>
+      <h1 id="home-main-title" class="home__title">
+        {{ 'home.title' | transloco }}
+      </h1>
+      <br>
+      <!-- <button id="home-main-btn" class="home__btn" type="button">
+        Teste Salvar
+      </button> -->
+      <section class="home__api-section" aria-label="Produtos em Destaque">
+        <div class="home__cards-container" role="group" aria-label="Lista de ofertas">
+          @for (item of data.items; track item.id) {
+            <article class="home__card">
+              <span class="home__card-id">#{{ item.id }}</span>
+              <h2 class="home__card-title">{{ item.titulo }}</h2>
+              <p class="home__card-description">{{ item.descricao }}</p>
+            </article>
+          }
+        </div>
+      </section>
+      <p class="home__paragraph">
+        {{ 'home.aboutParagraph' | transloco }}
+      </p>
+    </section>
+  }
+  <!-- Nem 'error' nem 'success' → status é 'idle', nada renderiza,
+       overlay global do loaderInterceptor cobre a tela -->
 </main>

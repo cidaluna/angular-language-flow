@@ -11,9 +11,17 @@
       "deleteBtnText": "Delete Account",
       "deleteWarning": "Warning: This action is permanent and will erase all your history and financial data from the system."
     },
+    "error": {
+      "retry": "Try again",
+      "title": "We couldn't load your information right now. Please try again in a moment."
+    },
     "errorMessage": "Could not load the data. Please try again.",
     "greeting": "Hello, {{nome}}. You have {{qtd}} messages.",
     "loading": "Loading...",
+    "switchError": {
+      "title": "We couldn't switch languages right now. We kept the previous language.",
+      "dismiss": "Got it"
+    },
     "title": "Check out what our institution has to offer"
   }
 }

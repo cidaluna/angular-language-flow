@@ -3,21 +3,26 @@ import { TranslocoService } from '@jsverse/transloco';
 
 @Injectable({ providedIn: 'root' })
 export class LanguageService {
-  private translocoService = inject(TranslocoService);
 
-  // Idioma inicial de boot padrão do sistema
-  public activeLang = signal<string>('pt-BR');
+  private activeLangSignal = signal<string>('pt-BR');
 
-  /**
-   * Modifica o idioma ativo da aplicação de forma centralizada e reativa
-   */
+  activeLang = this.activeLangSignal.asReadonly();
+
+  // Chamado pelo dropdown — registra a INTENÇÃO do usuário
   changeLanguage(langCode: string): void {
     if (!langCode) return;
     const sanitizedLang = langCode.trim();
 
-    // Atualiza o Transloco e o Signal do Dropdown
-    this.translocoService.setActiveLang(sanitizedLang);
-    this.activeLang.set(sanitizedLang);
+    // NÃO chama translocoService.setActiveLang aqui.
+    // Isso só registra a intenção — quem aplica de fato é o home.ts,
+    // depois que a API confirmar que o idioma é válido.
+    this.activeLangSignal.set(sanitizedLang);
     console.log("::[Language Service] método changeLanguage com activeLang: ", sanitizedLang);
+  }
+
+  // Chamado pela Home quando uma troca falha — devolve o signal
+  // para o idioma que estava realmente confirmado na tela
+  revertTo(lang: string): void {
+    this.activeLangSignal.set(lang);
   }
 }

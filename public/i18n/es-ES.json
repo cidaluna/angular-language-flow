@@ -11,9 +11,17 @@
       "deleteBtnText": "Eliminar Cuenta",
       "deleteWarning": "Aviso: Esta acción es permanente y borrará todo tu historial y datos financieros del sistema."
     },
+    "error": {
+      "retry": "Reintentar",
+      "title": "No se pudo cargar tu información en este momento. Inténtalo de nuevo en unos instantes."
+    },
     "errorMessage": "No fue posible cargar los datos. Inténtalo de nuevo.",
     "greeting": "Hola, {{nome}}. Tienes {{qtd}} mensajes.",
     "loading": "Cargando...",
+    "switchError": {
+      "title": "No se pudo cambiar de idioma en este momento. Mantuvimos el idioma anterior.",
+      "dismiss": "Entendido"
+    },
     "title": "Conoce a continuación lo que nuestra institución educativa ofrece"
   }
 }

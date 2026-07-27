@@ -11,9 +11,17 @@
       "deleteBtnText": "Excluir Conta",
       "deleteWarning": "Aviso: Esta ação é permanente e apagará todos os seus históricos e dados financeiros do sistema."
     },
+    "error": {
+      "retry": "Tentar novamente",
+      "title": "Não foi possível carregar suas informações agora. Tente novamente em instantes."
+    },
     "errorMessage": "Não foi possível carregar os dados. Tente novamente.",
     "greeting": "Olá, {{nome}}. Você tem {{qtd}} mensagens.",
     "loading": "Carregando...",
+    "switchError": {
+      "title": "Não foi possível trocar de idioma agora. Mantivemos o idioma anterior.",
+      "dismiss": "Entendi"
+    },
     "title": "Confira abaixo o que nossa instituição de ensino oferece"
   }
 }
