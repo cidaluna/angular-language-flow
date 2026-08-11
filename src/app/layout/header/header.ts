@@ -1,7 +1,10 @@
 import { Component, inject } from '@angular/core';
-import { LanguageService } from '../../core/services/language.service';
 import { TranslocoModule } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
+import { Store } from '@ngxs/store';
+import { ChangeLanguage } from '../../home/components/home/state/home-language.actions';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { HomeLanguageState } from '../../home/components/home/state/home-language.state';
 
 @Component({
   selector: 'app-header',
@@ -10,22 +13,29 @@ import { CommonModule } from '@angular/common';
   styleUrl: './header.scss',
 })
 export class Header {
-  // Tornamos público para o HTML conseguir ler: [value]="languageService.activeLang()"
-  public languageService = inject(LanguageService);
+  private store = inject(Store);
+  protected currentLang = toSignal(this.store.select(HomeLanguageState.currentLang), { initialValue: 'pt-BR' });
 
   // Lista de idiomas disponíveis para o @for do seu HTML
-  protected languages = [
+  protected readonly languages = [
     { code: 'pt-BR', label: 'Português' },
     { code: 'en-US', label: 'English' },
     { code: 'es-ES', label: 'Español' }
   ];
 
-  onLanguageChange(event: Event): void {
+  /**
+   * O Header não salva preferência diretamente.
+   * Ele apenas comunica a intenção do usuário ao NGXS.
+   * O State decide:
+   * POST preferência ->  GET Home -> Transloco -> commit
+   */
+  protected onLanguageChange(event: Event): void {
     console.log(":: [Header] método onLanguageChange com o event: ", event);
     const selectElement = event.target as HTMLSelectElement;
-    if (selectElement) {
-      // Altera o idioma globalmente através do serviço
-      this.languageService.changeLanguage(selectElement.value);
+    if (!selectElement) {
+      return;
     }
+    const selectedLanguage = selectElement.value;
+    this.store.dispatch(new ChangeLanguage(selectedLanguage));
   }
 }

@@ -1,7 +1,7 @@
 <main class="home" aria-labelledby="home-main-title">
   <!-- Toast não bloqueante: só aparece quando uma TROCA de idioma falha,
        e a tela de baixo continua mostrando os dados anteriores válidos -->
-  @if (switchError(); as reason) {
+  @if (switchError()) {
     <div class="home__switch-error" role="alert">
       <p>{{ 'home.switchError.title' | transloco }}</p>
       <button type="button" (click)="dismissSwitchError()">
@@ -10,7 +10,7 @@
     </div>
   }
 
-  @if (errorMessage(); as reason) {
+  @if (errorMessage()) {
     <div class="home__error" role="alert">
       <p class="home__error-message">
         {{ 'home.error.title' | transloco }}

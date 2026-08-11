@@ -10,21 +10,20 @@ import { LoaderState } from './core/loader/loader.state';
 import { provideStore } from '@ngxs/store';
 import { loaderInterceptor } from './core/loader/loader.interceptor';
 import { errorInterceptor } from './core/error/error.interceptor';
+import { HomeLanguageState } from './home/components/home/state/home-language.state';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
 
-    // Configura o HttpClient para executar o loader primeiro, e depois monitora os erros!
     provideHttpClient(withInterceptors([
       loaderInterceptor,
-      errorInterceptor
+      errorInterceptor,
       ])
     ),
 
-    // Registra o NGXS global com o estado do loader
-    provideStore([LoaderState]),
+    provideStore([HomeLanguageState, LoaderState]),
 
     // Configurações gerais de comportamento do Transloco
     provideTransloco({

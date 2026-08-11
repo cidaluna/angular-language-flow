@@ -12,7 +12,7 @@ export class TranslocoHttpLoader implements TranslocoLoader {
   private readonly http = inject(HttpClient);
 
   getTranslation(lang: string) {
-    console.log(":: [Transloco Loader] método getTranslation JSON com lang:", lang);
+    console.log(":: [Transloco Loader JSON] método getTranslation JSON com lang:", lang);
     return this.http.get<Translation>(`i18n/${lang}.json`);
   }
 }

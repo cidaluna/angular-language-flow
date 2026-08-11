@@ -6,7 +6,7 @@
       {{ 'header.languageLabel' | transloco }}
       <select
         class="app-header__select"
-        [value]="languageService.activeLang()"
+        [value]="currentLang()"
         (change)="onLanguageChange($event)"
       >
         @for (lang of languages; track lang) {

@@ -1,48 +1,330 @@
 /**
- * Fake API simples (Express) para o teste de i18n + HTTP.
- * Adaptado para servir a estrutura unificada de "homeItems".
+ * Fake API simples (Express) para teste de i18n + HTTP.
  *
- * Rodar com: npm run server (via script criado no package.json)
- * Requer:    npm install express cors
+ * Endpoints:
+ *
+ * GET  /apiHomeItems
+ *      - Recebe Accept-Language
+ *      - Retorna somente o bloco correspondente ao idioma
+ *
+ * GET  /apiLanguagePreference
+ *      - Recupera a última preferência salva
+ *      - Quando não existe preferência, retorna { lang: null }
+ *
+ * POST /apiLanguagePreference
+ *      - Recebe Accept-Language
+ *      - Persiste a preferência
+ *
+ * Rodar com:
+ * npm run server
+ *
+ * Requer:
+ * npm install express cors
  */
+
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 
 const app = express();
+
 app.use(cors());
 
 const DB_PATH = path.join(__dirname, 'db.json');
+const LANGUAGE_HEADER = 'accept-language';
 
-// CORREÇÃO: Alinhando a rota com a chave do seu db.json e a chamada do Angular
-app.get('/apiHomeItems', (req, res) => {
 
-  // Mantém o seu Toggle de teste para o checkbox "Simular erro" do Angular
-  if (req.query.simulateError === 'true') {
-    return res.status(500).json({ message: 'Erro simulado para fins de teste.' });
+// -----------------------------------------------------------------------------
+// Helpers de leitura/escrita do db.json
+// -----------------------------------------------------------------------------
+
+function readDb() {
+  const raw = fs.readFileSync(DB_PATH, 'utf-8');
+  return JSON.parse(raw);
+}
+
+function writeDb(db) {
+  fs.writeFileSync(
+    DB_PATH,
+    JSON.stringify(db, null, 2),
+    'utf-8'
+  );
+}
+
+
+// -----------------------------------------------------------------------------
+// Resolve o primeiro idioma de um Accept-Language.
+//
+// Exemplos:
+//
+// "pt-BR"
+// "en-US,en;q=0.9"
+// "pt-BR,pt;q=0.9,en-US;q=0.8"
+// -----------------------------------------------------------------------------
+
+function parsePrimaryLanguage(headerValue) {
+  if (!headerValue) {
+    return null;
   }
 
+  return headerValue
+    .split(',')[0]
+    .split(';')[0]
+    .trim();
+}
+
+
+// -----------------------------------------------------------------------------
+// GET /apiLanguagePreference
+//
+// Recupera a última preferência salva.
+//
+// Importante:
+// Quando não existe preferência, NÃO retornamos 404.
+// Retornamos 200 com:
+//
+// {
+//   "lang": null
+// }
+//
+// Isso permite que o frontend trate "não existe preferência" como uma
+// situação de negócio normal, e não como erro HTTP.
+// -----------------------------------------------------------------------------
+
+app.get('/apiLanguagePreference', (req, res) => {
+  console.log(
+    ':: [Server] GET /apiLanguagePreference'
+  );
+
   try {
-    // Lê o seu arquivo db.json atualizado
-    const dbData = JSON.parse(fs.readFileSync(DB_PATH, 'utf-8'));
+    const dbData = readDb();
 
-    // Captura o array de dentro da chave "apiHomeItems"
-    const homeItemsResponse = dbData.apiHomeItems || [];
+    const preferences = Array.isArray(dbData.languagePreference)
+      ? dbData.languagePreference
+      : [];
 
-    // Pequeno atraso para simular latência real de rede e ver o Loader piscando
-    setTimeout(() => {
-      res.status(200).json(homeItemsResponse);
-    }, 3000);
+    const lastPreference = preferences.length > 0
+      ? preferences[preferences.length - 1]
+      : null;
+
+    if (!lastPreference?.lang) {
+      console.log(
+        ':: [Server] nenhuma preferência de idioma encontrada → lang: null'
+      );
+
+      return res.status(200).json({
+        lang: null
+      });
+    }
+
+    console.log(
+      ':: [Server] preferência encontrada:',
+      lastPreference
+    );
+
+    return res.status(200).json({
+      lang: lastPreference.lang,
+      updatedAt: lastPreference.updatedAt
+    });
 
   } catch (error) {
-    console.error(':: [Server Error] Falha ao ler o arquivo db.json:', error);
-    res.status(500).json({ message: 'Erro interno ao processar o banco de dados fake.' });
+    console.error(
+      ':: [Server Error] Falha ao ler preferência:',
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Erro interno ao consultar a preferência de idioma.'
+    });
   }
 });
 
+
+// -----------------------------------------------------------------------------
+// GET /apiHomeItems
+//
+// Recebe o idioma exclusivamente pelo Accept-Language.
+// -----------------------------------------------------------------------------
+
+app.get('/apiHomeItems', (req, res) => {
+
+  // Toggle utilizado para testes de erro.
+  if (req.query.simulateError === 'true') {
+    return res.status(500).json({
+      message: 'Erro simulado para fins de teste.'
+    });
+  }
+
+  const rawHeader = req.headers[LANGUAGE_HEADER];
+  const requestedLang = parsePrimaryLanguage(rawHeader);
+
+  console.log(
+    ':: [Server] GET /apiHomeItems',
+    '— Accept-Language recebido:',
+    rawHeader,
+    '→ resolvido para:',
+    requestedLang
+  );
+
+  if (!requestedLang) {
+    console.warn(
+      ':: [Server] requisição sem header Accept-Language — 400'
+    );
+
+    return res.status(400).json({
+      message: 'Header Accept-Language é obrigatório.'
+    });
+  }
+
+  try {
+    const dbData = readDb();
+
+    const block = (dbData.apiHomeItems || [])
+      .find((entry) => entry.lang === requestedLang);
+
+    if (!block) {
+      console.warn(
+        ':: [Server] nenhum bloco encontrado para o idioma:',
+        requestedLang
+      );
+
+      return res.status(404).json({
+        message: `Nenhum conteúdo para o idioma "${requestedLang}".`
+      });
+    }
+
+    // Simula latência de rede.
+    setTimeout(() => {
+
+      console.log(
+        ':: [Server] conteúdo retornado para:',
+        requestedLang
+      );
+
+      res.status(200).json(block);
+
+    }, 3000);
+
+  } catch (error) {
+
+    console.error(
+      ':: [Server Error] Falha ao ler o arquivo db.json:',
+      error
+    );
+
+    res.status(500).json({
+      message: 'Erro interno ao processar o banco de dados fake.'
+    });
+  }
+});
+
+
+// -----------------------------------------------------------------------------
+// POST /apiLanguagePreference
+//
+// Persiste a preferência enviada pelo frontend.
+//
+// O idioma vem exclusivamente no:
+//
+// Accept-Language
+// -----------------------------------------------------------------------------
+
+app.post('/apiLanguagePreference', (req, res) => {
+
+  // Toggle utilizado para simular falha no POST.
+  if (req.query.simulateError === 'true') {
+    return res.status(500).json({
+      message: 'Erro simulado para fins de teste.'
+    });
+  }
+
+  const rawHeader = req.headers[LANGUAGE_HEADER];
+  const requestedLang = parsePrimaryLanguage(rawHeader);
+
+  console.log(
+    ':: [Server] POST /apiLanguagePreference',
+    '— Accept-Language recebido:',
+    rawHeader,
+    '→ resolvido para:',
+    requestedLang
+  );
+
+  if (!requestedLang) {
+    console.warn(
+      ':: [Server] POST sem header Accept-Language — 400'
+    );
+
+    return res.status(400).json({
+      message: 'Header Accept-Language é obrigatório.'
+    });
+  }
+
+  try {
+
+    const dbData = readDb();
+
+    if (!Array.isArray(dbData.languagePreference)) {
+      dbData.languagePreference = [];
+    }
+
+    // Mantém somente a preferência mais recente.
+    const entry = {
+      lang: requestedLang,
+      updatedAt: new Date().toISOString()
+    };
+
+    dbData.languagePreference = [entry];
+
+    writeDb(dbData);
+
+    // Simula latência de rede.
+    setTimeout(() => {
+
+      console.log(
+        ':: [Server] preferência salva com sucesso:',
+        entry
+      );
+
+      res.status(200).json(entry);
+
+    }, 3000);
+
+  } catch (error) {
+
+    console.error(
+      ':: [Server Error] Falha ao gravar no db.json:',
+      error
+    );
+
+    res.status(500).json({
+      message: 'Erro interno ao processar o banco de dados fake.'
+    });
+  }
+});
+
+
+// -----------------------------------------------------------------------------
+// Inicialização
+// -----------------------------------------------------------------------------
+
 const PORT = 3000;
+
 app.listen(PORT, () => {
-  // Atualizado o log para refletir a nova rota padrão do ecossistema do seu app
-  console.log(`:: [Server] Fake API ativa rodando em http://localhost:${PORT}/apiHomeItems`);
+
+  console.log(
+    `:: [Server] Fake API ativa em http://localhost:${PORT}`
+  );
+
+  console.log(
+    `:: [Server] GET  /apiHomeItems`
+  );
+
+  console.log(
+    `:: [Server] GET  /apiLanguagePreference`
+  );
+
+  console.log(
+    `:: [Server] POST /apiLanguagePreference`
+  );
 });

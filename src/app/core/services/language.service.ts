@@ -1,27 +1,20 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { Store } from '@ngxs/store';
+import { HomeLanguageState } from '../../home/components/home/state/home-language.state';
 
 @Injectable({ providedIn: 'root' })
 export class LanguageService {
 
-  private activeLangSignal = signal<string>('pt-BR');
+  private readonly store = inject(Store);
 
-  activeLang = this.activeLangSignal.asReadonly();
-
-  // Chamado pelo dropdown — registra a INTENÇÃO do usuário
-  changeLanguage(langCode: string): void {
-    if (!langCode) return;
-    const sanitizedLang = langCode.trim();
-
-    // NÃO chama translocoService.setActiveLang aqui.
-    // Isso só registra a intenção — quem aplica de fato é o home.ts,
-    // depois que a API confirmar que o idioma é válido.
-    this.activeLangSignal.set(sanitizedLang);
-    console.log("::[Language Service] método changeLanguage com activeLang: ", sanitizedLang);
-  }
-
-  // Chamado pela Home quando uma troca falha — devolve o signal
-  // para o idioma que estava realmente confirmado na tela
-  revertTo(lang: string): void {
-    this.activeLangSignal.set(lang);
-  }
+  /**
+   * O idioma não é mais armazenado neste service.
+   * O NGXS é a fonte de verdade.
+   */
+  readonly activeLang = toSignal(this.store.select(HomeLanguageState.currentLang),
+    {
+      initialValue: 'pt-BR',
+    }
+  );
 }
