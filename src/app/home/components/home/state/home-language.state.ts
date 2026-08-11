@@ -1,157 +1,238 @@
 import { Injectable } from '@angular/core';
-import { State, Action, StateContext, Selector } from '@ngxs/store';
-import { catchError, tap, throwError, switchMap, map, timeout } from 'rxjs';
+
+import {
+  Action,
+  Selector,
+  State,
+  StateContext,
+} from '@ngxs/store';
+
+import {
+  catchError,
+  map,
+  switchMap,
+  tap,
+  throwError,
+  timeout,
+} from 'rxjs';
+
+import { TranslocoService } from '@jsverse/transloco';
+
 import { HomeApiService } from '../services/home-api.service';
-import { LanguagePreferenceApiService } from './../services/language-preference-api.service';
+import { LanguagePreferenceApiService } from '../services/language-preference-api.service';
+
 import {
   ChangeLanguage,
-  SyncLanguageSuccess,
-  SyncLanguageFailure,
-  LoadInitialHomeItems,
   ClearSwitchError,
+  LoadInitialHomeItems,
+  SyncLanguageFailure,
+  SyncLanguageSuccess,
 } from './home-language.actions';
+
 import {
   HOME_LANGUAGE_STATE_DEFAULTS,
   HomeItemsResponse,
   HomeLanguageStateModel,
-  LanguagePreferenceResponse,
-} from './../interfaces/home-item.interface';
-import { TranslocoService } from '@jsverse/transloco';
+} from '../interfaces/home-item.interface';
 
-/**
- * Idioma padrão da aplicação.
- *
- * Esta constante representa o fallback de negócio:
- *
- * "Se não existir preferência persistida, a Home deve ser
- * carregada em pt-BR."
- */
-const DEFAULT_LANGUAGE = 'pt-BR';
-
-@State<HomeLanguageStateModel>({ name: 'homeLanguage', defaults: HOME_LANGUAGE_STATE_DEFAULTS })
+@State<HomeLanguageStateModel>({
+  name: 'homeLanguage',
+  defaults: HOME_LANGUAGE_STATE_DEFAULTS,
+})
 @Injectable()
 export class HomeLanguageState {
   constructor(
-    private homeApi: HomeApiService,
-    private languagePreferenceApi: LanguagePreferenceApiService,
-    private translocoService: TranslocoService,
+    private readonly homeApi: HomeApiService,
+    private readonly languagePreferenceApi: LanguagePreferenceApiService,
+    private readonly translocoService: TranslocoService,
   ) {}
 
-  @Selector() static items(state: HomeLanguageStateModel) {
+  // ---------------------------------------------------------------------------
+  // SELECTORS
+  // ---------------------------------------------------------------------------
+
+  @Selector()
+  static items(state: HomeLanguageStateModel) {
     return state.items;
   }
-  @Selector() static loading(state: HomeLanguageStateModel) {
+
+  @Selector()
+  static loading(state: HomeLanguageStateModel) {
     return state.loading;
   }
-  @Selector() static error(state: HomeLanguageStateModel) {
+
+  @Selector()
+  static error(state: HomeLanguageStateModel) {
     return state.error;
   }
-  @Selector() static currentLang(state: HomeLanguageStateModel) {
+
+  @Selector()
+  static currentLang(state: HomeLanguageStateModel) {
     return state.currentLang;
   }
 
+  // ---------------------------------------------------------------------------
+  // VALIDADORES
+  // ---------------------------------------------------------------------------
+
   /**
-   * A API não é considerada válida somente porque respondeu HTTP 200.
+   * Valida a estrutura mínima da resposta.
    *
-   * Também precisamos garantir que o conteúdo retornado pertence
-   * exatamente ao idioma solicitado.
+   * Independente do fluxo, o backend precisa devolver:
    *
-   * Exemplo:
+   * response.lang
    *
-   * solicitado: en-US
-   * recebido:   pt-BR
-   *
-   * Nesse caso a resposta é rejeitada.
+   * Caso o idioma não exista, a resposta não pode ser considerada válida.
    */
-  private validateResponse(response: HomeItemsResponse, requestedLang: string): HomeItemsResponse {
+  private validateResponseStructure(
+    response: HomeItemsResponse,
+  ): HomeItemsResponse {
     if (!response.lang?.trim()) {
-      throw new Error('PAYLOAD_INVALIDO_LANG_AUSENTE');
+      throw new Error(
+        'PAYLOAD_INVALIDO_LANG_AUSENTE',
+      );
     }
+
+    return response;
+  }
+
+  /**
+   * Validação utilizada SOMENTE na troca manual de idioma.
+   *
+   * Quando o usuário escolhe explicitamente "en-US", primeiro persistimos
+   * essa preferência no backend.
+   *
+   * Depois fazemos o GET da Home com:
+   *
+   * Accept-Language: en-US
+   *
+   * Nesse fluxo esperamos que o backend devolva:
+   *
+   * response.lang === en-US
+   */
+  private validateRequestedLanguage(
+    response: HomeItemsResponse,
+    requestedLang: string,
+  ): HomeItemsResponse {
     if (response.lang !== requestedLang) {
-      throw new Error('PAYLOAD_LANG_DIVERGENTE_DO_SOLICITADO');
+      throw new Error(
+        'PAYLOAD_LANG_DIVERGENTE_DO_SOLICITADO',
+      );
     }
+
     return response;
   }
 
   // ---------------------------------------------------------------------------
-  // PIPELINE HTTP + TRANSLOCO + COMMIT
+  // PIPELINE DE SINCRONIZAÇÃO
   // ---------------------------------------------------------------------------
 
   /**
-   * Pipeline compartilhado pela carga inicial e pela troca de idioma.
+   * Pipeline comum depois que o GET /apiHomeItems foi executado.
    *
-   * Ordem obrigatória:
+   * Responsabilidades:
    *
-   * 1. API responde
-   * 2. valida response.lang
-   * 3. garante que o Transloco possui o idioma
-   * 4. ativa o idioma
-   * 5. commita items + currentLang no NGXS
+   * 1. Validar payload.
+   * 2. Carregar a tradução correspondente.
+   * 3. Só depois alterar o Transloco.
+   * 4. Só depois realizar o commit no NGXS.
    *
-   * Caso qualquer etapa falhe:
+   * O parâmetro validateRequestedLanguage controla se devemos exigir
+   * que response.lang seja exatamente igual ao idioma solicitado.
    *
-   * - idioma atual não é alterado;
-   * - cards atuais não são alterados;
-   * - erro é armazenado no State.
+   * INITIAL:
+   *   false
+   *
+   * CHANGE:
+   *   true
    */
   private syncAndApply(
     ctx: StateContext<HomeLanguageStateModel>,
     response$: ReturnType<HomeApiService['getHomeItems']>,
     requestedLang: string,
+    validateRequestedLanguage: boolean,
   ) {
     return response$.pipe(
-      // -----------------------------------------------------------------------
-      // 1. Validação do payload
-      // -----------------------------------------------------------------------
-
-      map((response) => this.validateResponse(response, requestedLang)),
 
       // -----------------------------------------------------------------------
-      // 2. Garantir que o Transloco conseguiu carregar o idioma
+      // 1. Validação estrutural
       // -----------------------------------------------------------------------
+      map((response) =>
+        this.validateResponseStructure(response),
+      ),
 
+      // -----------------------------------------------------------------------
+      // 2. Validação específica da troca manual
+      // -----------------------------------------------------------------------
+      map((response) => {
+        if (!validateRequestedLanguage) {
+          return response;
+        }
+
+        return this.validateRequestedLanguage(
+          response,
+          requestedLang,
+        );
+      }),
+
+      // -----------------------------------------------------------------------
+      // 3. O idioma efetivo vem do response.lang
+      // -----------------------------------------------------------------------
       switchMap((response) =>
         this.translocoService.selectTranslation(response.lang).pipe(
           timeout({
             each: 6000,
             with: () => throwError(() => new Error('TIMEOUT_TRANSLOCO')),
           }),
-
           map(() => response),
         ),
       ),
 
       // -----------------------------------------------------------------------
-      // 3. Commit atômico
+      // 4. COMMIT
       // -----------------------------------------------------------------------
-
+      //
+      // Somente neste ponto temos:
+      //
+      // API válida
+      // +
+      // idioma válido
+      // +
+      // tradução carregada
+      //
+      // Portanto o idioma pode ser considerado oficialmente aplicado.
+      //
       tap((response) => {
-        /**
-         * O idioma somente se torna oficial neste ponto.
-         *
-         * Antes disso:
-         *
-         * currentLang = idioma anterior
-         *
-         * Depois disso:
-         *
-         * currentLang = idioma novo
-         */
-        this.translocoService.setActiveLang(response.lang);
+        this.translocoService.setActiveLang(
+          response.lang,
+        );
 
-        ctx.dispatch(new SyncLanguageSuccess(response.lang, response.items));
+        ctx.dispatch(
+          new SyncLanguageSuccess(
+            response.lang,
+            response.items,
+          ),
+        );
       }),
 
       // -----------------------------------------------------------------------
-      // 4. Falha
+      // 5. Falha
       // -----------------------------------------------------------------------
-
       catchError((err) => {
-        const message = err?.message ?? 'ERRO_DESCONHECIDO';
+        const errorMessage =
+          err?.message ??
+          'ERRO_DESCONHECIDO';
 
-        console.error('[HomeLanguageState] falha na sincronização:', message);
+        console.error(
+          '[HomeLanguageState] falha na sincronização:',
+          errorMessage,
+        );
 
-        ctx.dispatch(new SyncLanguageFailure(message));
+        ctx.dispatch(
+          new SyncLanguageFailure(
+            errorMessage,
+          ),
+        );
 
         return throwError(() => err);
       }),
@@ -159,111 +240,33 @@ export class HomeLanguageState {
   }
 
   // ---------------------------------------------------------------------------
-  // CARGA INICIAL
+  // FLUXO 1 — CARGA INICIAL
   // ---------------------------------------------------------------------------
 
   /**
-   * Fluxo inicial da Home.
+   * Fluxo executado quando a Home nasce.
    *
    * Regra:
    *
-   * GET apiLanguagePreference
-   *          ↓
-   * preferência encontrada?
-   *      ↓          ↓
-   *     sim        não
-   *      ↓          ↓
-   *  preferência   pt-BR
-   *      ↓          ↓
-   *      └────┬─────┘
-   *           ↓
-   * GET apiHomeItems
+   * 1. Começamos com pt-BR.
+   * 2. Fazemos GET /apiHomeItems.
+   * 3. Enviamos Accept-Language: pt-BR.
+   * 4. O backend consulta a preferência persistida.
+   * 5. response.lang representa o idioma efetivamente determinado.
+   *
+   * Portanto:
+   *
+   * requestedLang !== necessariamente response.lang
    */
   @Action(LoadInitialHomeItems)
-  loadInitial(ctx: StateContext<HomeLanguageStateModel>) {
-    console.log('[HomeLanguageState] iniciando carga inicial');
-
-    ctx.patchState({
-      pendingLang: null,
-      lastAttemptedLang: null,
-      loading: true,
-      error: null,
-    });
-
-    return this.languagePreferenceApi.getLanguagePreference().pipe(
-      // ---------------------------------------------------------------------
-      // Resolve idioma
-      // ---------------------------------------------------------------------
-
-      map((preference: LanguagePreferenceResponse) => {
-        const preferenceLang = preference.lang?.trim();
-
-        const resolvedLang = preferenceLang || DEFAULT_LANGUAGE;
-
-        console.log('[HomeLanguageState] preferência recebida:', preferenceLang);
-
-        console.log('[HomeLanguageState] idioma resolvido:', resolvedLang);
-
-        return resolvedLang;
-      }),
-
-      // ---------------------------------------------------------------------
-      // GET da Home com idioma efetivamente resolvido
-      // ---------------------------------------------------------------------
-
-      switchMap((resolvedLang) => {
-        ctx.patchState({
-          pendingLang: resolvedLang,
-          lastAttemptedLang: resolvedLang,
-        });
-
-        return this.syncAndApply(ctx, this.homeApi.getHomeItems(resolvedLang), resolvedLang);
-      }),
-
-      // ---------------------------------------------------------------------
-      // Falha ao consultar a preferência
-      // ---------------------------------------------------------------------
-
-      catchError((err) => {
-        const message = err?.message ?? 'ERRO_AO_CONSULTAR_PREFERENCIA';
-
-        console.error('[HomeLanguageState] falha ao consultar preferência:', message);
-
-        ctx.dispatch(new SyncLanguageFailure(message));
-
-        return throwError(() => err);
-      }),
+  loadInitial(
+    ctx: StateContext<HomeLanguageStateModel>,
+    action: LoadInitialHomeItems,
+  ) {
+    console.log(
+      '[HomeLanguageState] carga inicial:',
+      action.lang,
     );
-  }
-
-  // ---------------------------------------------------------------------------
-  // TROCA DE IDIOMA
-  // ---------------------------------------------------------------------------
-
-  /**
-   * Fluxo de troca manual.
-   *
-   * POST preferência
-   *       ↓
-   * sucesso?
-   *       ↓
-   * GET Home
-   *       ↓
-   * valida
-   *       ↓
-   * Transloco
-   *       ↓
-   * commit
-   *
-   * Se o POST falhar:
-   *
-   * - não executamos GET Home;
-   * - idioma atual continua intacto;
-   * - cards atuais continuam intactos.
-   */
-  @Action(ChangeLanguage)
-  changeLanguage(ctx: StateContext<HomeLanguageStateModel>, action: ChangeLanguage) {
-    console.log('[HomeLanguageState] troca de idioma solicitada →', action.lang);
 
     ctx.patchState({
       pendingLang: action.lang,
@@ -272,80 +275,145 @@ export class HomeLanguageState {
       error: null,
     });
 
-    return this.languagePreferenceApi.saveLanguagePreference(action.lang).pipe(
-      // ---------------------------------------------------------------------
-      // POST falhou
-      // ---------------------------------------------------------------------
+    return this.syncAndApply(
+      ctx,
+      this.homeApi.getHomeItems(action.lang),
+      action.lang,
 
-      catchError((err) => {
-        const message = err?.message ?? 'ERRO_AO_SALVAR_PREFERENCIA';
-
-        console.error('[HomeLanguageState] falha ao salvar preferência:', message);
-
-        ctx.dispatch(new SyncLanguageFailure(message));
-
-        return throwError(() => err);
-      }),
-
-      // ---------------------------------------------------------------------
-      // POST sucesso → somente então GET Home
-      // ---------------------------------------------------------------------
-
-      switchMap(() => this.syncAndApply(ctx, this.homeApi.getHomeItems(action.lang), action.lang)),
+      // Na inicialização NÃO exigimos:
+      // response.lang === requestedLang
+      false,
     );
   }
 
   // ---------------------------------------------------------------------------
-  // COMMIT DE SUCESSO
+  // FLUXO 2 — TROCA MANUAL DE IDIOMA
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Fluxo iniciado pelo dropdown.
+   *
+   * Regra obrigatória:
+   *
+   * POST preferência
+   *       ↓
+   * sucesso
+   *       ↓
+   * GET Home
+   *       ↓
+   * valida response.lang
+   *       ↓
+   * Transloco
+   *       ↓
+   * commit
+   */
+  @Action(ChangeLanguage)
+  changeLanguage(
+    ctx: StateContext<HomeLanguageStateModel>,
+    action: ChangeLanguage,
+  ) {
+    console.log(
+      '[HomeLanguageState] troca de idioma:',
+      action.lang,
+    );
+
+    ctx.patchState({
+      pendingLang: action.lang,
+      lastAttemptedLang: action.lang,
+      loading: true,
+      error: null,
+    });
+
+    return this.languagePreferenceApi
+      .saveLanguagePreference(action.lang)
+      .pipe(
+
+        // O GET só acontece depois do sucesso do POST.
+        switchMap(() =>
+          this.syncAndApply(
+            ctx,
+            this.homeApi.getHomeItems(
+              action.lang,
+            ),
+            action.lang,
+
+            // Neste fluxo a resposta precisa corresponder
+            // ao idioma solicitado.
+            true,
+          ),
+        ),
+
+        catchError((err) => {
+          const errorMessage =
+            err?.message ??
+            'ERRO_DESCONHECIDO';
+
+          console.error(
+            '[HomeLanguageState] falha ao salvar preferência ou sincronizar:',
+            errorMessage,
+          );
+
+          ctx.dispatch(
+            new SyncLanguageFailure(
+              errorMessage,
+            ),
+          );
+
+          return throwError(() => err);
+        }),
+      );
+  }
+
+  // ---------------------------------------------------------------------------
+  // SUCCESS
   // ---------------------------------------------------------------------------
 
   @Action(SyncLanguageSuccess)
-  syncSuccess(ctx: StateContext<HomeLanguageStateModel>, action: SyncLanguageSuccess) {
+  syncSuccess(
+    ctx: StateContext<HomeLanguageStateModel>,
+    action: SyncLanguageSuccess,
+  ) {
     ctx.patchState({
       currentLang: action.lang,
-
       items: action.items,
-
       pendingLang: null,
-
       loading: false,
-
       error: null,
     });
   }
 
   // ---------------------------------------------------------------------------
-  // COMMIT DE FALHA
+  // FAILURE
   // ---------------------------------------------------------------------------
 
   @Action(SyncLanguageFailure)
-  syncFailure(ctx: StateContext<HomeLanguageStateModel>, action: SyncLanguageFailure) {
+  syncFailure(
+    ctx: StateContext<HomeLanguageStateModel>,
+    action: SyncLanguageFailure,
+  ) {
     /**
-     * Muito importante:
+     * IMPORTANTE:
      *
-     * NÃO alteramos:
+     * currentLang e items NÃO são alterados.
      *
-     * currentLang
-     * items
-     *
-     * Portanto, se o usuário já tinha uma Home válida e a troca
-     * falhar, a tela permanece no idioma anterior.
+     * Isso garante que uma troca de idioma malsucedida não destrua
+     * a última tela válida.
      */
     ctx.patchState({
       pendingLang: null,
-
       loading: false,
-
       error: action.error,
     });
   }
 
   // ---------------------------------------------------------------------------
-  // LIMPA ERRO DO TOAST
+  // CLEAR ERROR
   // ---------------------------------------------------------------------------
 
   @Action(ClearSwitchError)
-  clearSwitchError(ctx: StateContext<HomeLanguageStateModel>) {
+  clearSwitchError(
+    ctx: StateContext<HomeLanguageStateModel>,
+  ) {
     ctx.patchState({
       error: null,
     });

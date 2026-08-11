@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { LanguagePreferenceResponse } from '../interfaces/home-item.interface';
@@ -7,30 +7,20 @@ import { LanguagePreferenceResponse } from '../interfaces/home-item.interface';
 @Injectable({ providedIn: 'root' })
 export class LanguagePreferenceApiService {
   private readonly baseUrl = `${environment.apiBaseUrl}/apiLanguagePreference`;
-
-  constructor(private http: HttpClient) {}
-
-    /**
-   * Recupera a última preferência de idioma persistida pela API.
-   *
-   * Quando não existe preferência, a API responde:
-   *
-   * {
-   *   "lang": null
-   * }
-   *
-   * Isso não é considerado erro.
-   */
-  getLanguagePreference(): Observable<LanguagePreferenceResponse> {
-    console.log('[LanguagePreferenceApiService] GET', this.baseUrl);
-    return this.http.get<LanguagePreferenceResponse>(this.baseUrl);
-  }
+  private readonly http = inject(HttpClient);
 
   /**
-   * Persiste uma nova preferência de idioma.
+   * Persiste a preferência de idioma do usuário.
    *
-   * A regra do backend determina que o idioma seja enviado
-   * exclusivamente através do header Accept-Language.
+   * Contrato com o backend:
+   * POST /apiLanguagePreference
+   * Header:
+   * Accept-Language
+   * Body:
+   * nenhum
+   *
+   * Esta API NÃO é utilizada para consultar a preferência.
+   * Ela somente persiste uma nova preferência.
    */
   saveLanguagePreference(lang: string): Observable<LanguagePreferenceResponse> {
 

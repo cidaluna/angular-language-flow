@@ -4,11 +4,6 @@ import { Observable } from 'rxjs';
 import { HomeItemsResponse } from '../interfaces/home-item.interface';
 import { environment } from '../../../../../environments/environment';
 
-/**
- * Orquestra o ciclo: chama a fake API já com o idioma pretendido no header
- * e só "comita" esse idioma (via LanguageService) se a chamada der certo.
- * Em caso de erro, idioma e dados anteriores são mantidos intactos.
- */
 @Injectable({ providedIn: 'root' })
 export class HomeApiService {
   private readonly baseUrl = `${environment.apiBaseUrl}/apiHomeItems`;
@@ -16,12 +11,18 @@ export class HomeApiService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Busca os dados da Home para um idioma específico.
+   * Carrega os dados da Home.
    *
-   * A decisão de qual idioma utilizar NÃO pertence a este service.
+   * Contrato com o backend:
+   * GET /apiHomeItems
+   * Header obrigatório:
+   * Accept-Language
+   * Não existe body.
    *
-   * O HomeLanguageState resolve a regra de negócio e informa
-   * explicitamente o idioma que deverá ser enviado.
+   * IMPORTANTE:
+   * O idioma enviado representa o idioma solicitado/inicial.
+   * O backend pode devolver response.lang diferente caso exista
+   * uma preferência previamente persistida.
    */
   getHomeItems(lang: string): Observable<HomeItemsResponse> {
 
