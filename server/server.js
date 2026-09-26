@@ -3,6 +3,11 @@
  *
  * Endpoints:
  *
+ * GET  /apiFF
+ *      - Recebe
+ *      - Retorna
+ *
+ *
  * GET  /apiHomeItems
  *      - Recebe Accept-Language
  *      - Retorna somente o bloco correspondente ao idioma
@@ -136,6 +141,53 @@ app.get('/apiLanguagePreference', (req, res) => {
 
     return res.status(500).json({
       message: 'Erro interno ao consultar a preferência de idioma.'
+    });
+  }
+});
+
+
+// -----------------------------------------------------------------------------
+// GET /apiFF
+//
+// Retorna o bloco de feature flags mockadas do db.json.
+//
+// Hoje existem 2 formatos de flag:
+//   - boolean → ex: "newDash": true
+//   - string  → ex: "allowedUsers": "[\"Cida\",\"João\",\"Bernadete123\"]"
+//
+// Importante:
+// O valor de flags do tipo string é retornado exatamente como está
+// persistido no db.json (uma string, não um array). Isso simula o
+// comportamento real do Harness FF, onde flags "string" chegam como
+// texto puro — o parsing (se necessário) é responsabilidade de quem
+// consome a flag no frontend.
+// -----------------------------------------------------------------------------
+
+app.get('/apiFF', (req, res) => {
+  console.log(
+    ':: [Server] GET /apiFF'
+  );
+
+  try {
+    const dbData = readDb();
+
+    const featureFlags = dbData.apiFF || {};
+
+    console.log(
+      ':: [Server] feature flags retornadas:',
+      featureFlags
+    );
+
+    return res.status(200).json(featureFlags);
+
+  } catch (error) {
+    console.error(
+      ':: [Server Error] Falha ao ler feature flags:',
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Erro interno ao consultar as feature flags.'
     });
   }
 });
@@ -314,6 +366,10 @@ app.listen(PORT, () => {
 
   console.log(
     `:: [Server] Fake API ativa em http://localhost:${PORT}`
+  );
+
+  console.log(
+    `:: [Server] GET  /apiFF`
   );
 
   console.log(

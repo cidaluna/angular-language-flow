@@ -53,3 +53,8 @@ export interface LanguagePreferenceResponse {
   updatedAt?: string;
 }
 
+export interface FeatureFlags {
+  newDash: boolean;
+  allowedUSers: string;
+}
+
