@@ -116,6 +116,6 @@ export class Home {
   }
 
   protected readonly canShowCards = computed(() =>
-    this.ffService.isUserAllowed('CidA')
+    this.ffService.isUserAllowed('ubs1234')
   );
 }

@@ -31,6 +31,7 @@ export class FeatureFlagService {
   }
 
   // Retorna o valor bruto de uma feature flag string
+  // keyof significa aceito como valor somente uma das chaves existentes no FeatureFlags
   getString(flag: keyof FeatureFlags): string {
     console.log(":: FF Entrou em getString com flag = ", flag);
     const value = this.flags?.[flag];
@@ -38,6 +39,7 @@ export class FeatureFlagService {
   }
 
   // Converte uma feature flag string contendo um JSON em uma lista segura de strings.
+  // keyof significa aceito como valor somente uma das chaves existentes no FeatureFlags.
   getStringArray(flag: keyof FeatureFlags): string[] {
     const value = this.getString(flag);
 
