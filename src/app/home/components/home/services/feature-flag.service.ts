@@ -55,13 +55,15 @@ export class FeatureFlagService {
     }
   }
 
-  // Verifica se o usuario informado/logado está autorizado na lista de logons vinda da feature flag string
+  // Verifica se o usuario informado/logado está autorizado na lista de logons vinda da feature flag string em allowedUsers.
   isUserAllowed(logon: string): boolean {
     console.log(":: FF Entrou no isUserAllowed com logon = ", logon);
     const allowedUsers = this.getStringArray('allowedUsers'); // nome do campo que vem da api
     console.log(":: FF Entrou no isUserAllowed com a lista allowedUsers = ", allowedUsers);
 
-    return allowedUsers.includes(logon);
+    return allowedUsers.some(
+      user => user.trim().toLocaleLowerCase() === logon.trim().toLocaleLowerCase()
+    );
   }
 
 }

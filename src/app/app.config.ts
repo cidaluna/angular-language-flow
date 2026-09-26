@@ -1,4 +1,4 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter } from '@angular/router';
 
 import { routes } from './app.routes';
@@ -11,6 +11,7 @@ import { provideStore } from '@ngxs/store';
 import { loaderInterceptor } from './core/loader/loader.interceptor';
 import { errorInterceptor } from './core/error/error.interceptor';
 import { HomeLanguageState } from './home/components/home/state/home-language.state';
+import { FeatureFlagService } from './home/components/home/services/feature-flag.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -22,6 +23,15 @@ export const appConfig: ApplicationConfig = {
       errorInterceptor,
       ])
     ),
+    {
+      provide: APP_INITIALIZER,
+      multi: true,
+      deps: [FeatureFlagService],
+      // Inicializa e aguarda o carregamento das FF_ durante o bootstrap
+      useFactory: (featureFlagService: FeatureFlagService) => {
+        return () => featureFlagService.initialize();
+      }
+    },
 
     provideStore([HomeLanguageState, LoaderState]),
 
