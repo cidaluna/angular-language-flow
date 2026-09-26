@@ -55,6 +55,6 @@ export interface LanguagePreferenceResponse {
 
 export interface FeatureFlags {
   newDash: boolean;
-  allowedUSers: string;
+  allowedUsers: string;
 }
 

@@ -5,6 +5,7 @@ import { Store } from '@ngxs/store';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { HomeLanguageState } from './state/home-language.state';
 import { ClearSwitchError, LoadInitialHomeItems } from './state/home-language.actions';
+import { FeatureFlagService } from './services/feature-flag.service';
 
 @Component({
   selector: 'app-home',
@@ -15,6 +16,7 @@ import { ClearSwitchError, LoadInitialHomeItems } from './state/home-language.ac
 })
 export class Home {
   private store = inject(Store);
+  private readonly ffService = inject(FeatureFlagService);
 
   protected items = toSignal(this.store.select(HomeLanguageState.items), { initialValue: [] });
   protected loading = toSignal(this.store.select(HomeLanguageState.loading), {
@@ -112,4 +114,8 @@ export class Home {
   protected dismissSwitchError(): void {
     this.store.dispatch(new ClearSwitchError());
   }
+
+  protected readonly canShowCards = computed(() =>
+    this.ffService.isUserAllowed('Cida')
+  );
 }

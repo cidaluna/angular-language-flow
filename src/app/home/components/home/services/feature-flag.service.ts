@@ -14,23 +14,25 @@ export class FeatureFlagService {
 
   // Carrega as feature flags antes que a aplicação comece a consulta-las
   async initialize(): Promise<void> {
-    console.log(":: Entrou em initialize");
+    console.log(":: FF Entrou em initialize");
     try {
       this.flags = await firstValueFrom(this.http.get<FeatureFlags>(this.baseUrl));
-    } finally {
       this.ready.set(true);
+    } catch {
+      this.flags = null;
+      this.ready.set(false);
     }
   }
 
   // Retorna o valor de uma feature flag booleana.
   getBoolean(flag: keyof FeatureFlags): boolean {
-    console.log(":: Entrou em getBoolean com flag = ", flag);
+    console.log(":: FF Entrou em getBoolean com flag = ", flag);
     return this.flags?.[flag] === true;
   }
 
   // Retorna o valor bruto de uma feature flag string
   getString(flag: keyof FeatureFlags): string {
-    console.log(":: Entrou em getString com flag = ", flag);
+    console.log(":: FF Entrou em getString com flag = ", flag);
     const value = this.flags?.[flag];
     return typeof value === 'string' ? value : '';
   }
@@ -42,15 +44,24 @@ export class FeatureFlagService {
     if (!value){
       return [];
     }
-    console.log(":: Entou no getStringArray com value = ", value);
+    console.log(":: FF Entou no getStringArray com value = ", value);
 
     try {
       const parsed: unknown = JSON.parse(value);
-      console.log(":: Entou no getStringArray e aplicou o parse = ", parsed);
+      console.log(":: FF Entou no getStringArray e aplicou o parse = ", parsed);
       return Array.isArray(parsed) && parsed.every(item => typeof item === 'string') ? parsed : [];
     } catch {
       return [];
     }
+  }
+
+  // Verifica se o usuario informado/logado está autorizado na lista de logons vinda da feature flag string
+  isUserAllowed(logon: string): boolean {
+    console.log(":: FF Entrou no isUserAllowed com logon = ", logon);
+    const allowedUsers = this.getStringArray('allowedUsers'); // nome do campo que vem da api
+    console.log(":: FF Entrou no isUserAllowed com a lista allowedUsers = ", allowedUsers);
+
+    return allowedUsers.includes(logon);
   }
 
 }
