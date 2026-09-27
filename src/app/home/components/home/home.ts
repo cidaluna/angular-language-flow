@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, effect, inject, untracked } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { TranslocoModule } from '@jsverse/transloco';
 import { Store } from '@ngxs/store';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -17,6 +17,7 @@ import { FeatureFlagService } from './services/feature-flag.service';
 export class Home {
   private store = inject(Store);
   private readonly ffService = inject(FeatureFlagService);
+  protected currentUser = signal('João');
 
   protected items = toSignal(this.store.select(HomeLanguageState.items), { initialValue: [] });
   protected loading = toSignal(this.store.select(HomeLanguageState.loading), {
@@ -115,7 +116,14 @@ export class Home {
     this.store.dispatch(new ClearSwitchError());
   }
 
-  protected readonly canShowCards = computed(() =>
-    this.ffService.isUserAllowed('ubs1234')
-  );
+  // Computed atualiza automaticamente quando as flags terminarem de carregar ou o usuário mudar
+  protected readonly canShowCards = computed(() => {
+    return this.ffService.isLogonEnabled('FF_0202_SHOW_CARDS', this.currentUser())
+  });
+
+  // Simulando usuários permitidos e não permitidos
+  protected changeUser(event: Event): void {
+    const element = event.target as HTMLSelectElement;
+    this.currentUser.set(element.value);
+  }
 }

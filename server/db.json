@@ -1,8 +1,22 @@
 {
   "apiFF": {
     "newDash": true,
-    "allowedUsers": "[\"Cida\",\"João\",\"UBS1234\",\"Bernadete123\"]"
+    "allowedUsers": "[\"Cida\",\"João\",\"JCS1234\",\"Bernadete123\"]"
   },
+  "apiFFHarness": [
+    {
+      "flag": "FF_0101_NEW_DASHBOARD",
+      "identifier": "true",
+      "kind": "boolean",
+      "value": true
+    },
+    {
+      "flag": "FF_0202_SHOW_CARDS",
+      "identifier": "logons_liberados",
+      "kind": "string",
+      "value": "[\"Cida\",\"João\",\"JCS1234\",\"Bernadete123\"]"
+    }
+  ],
   "apiLanguagePreference": [],
   "apiHomeItems": [
     {

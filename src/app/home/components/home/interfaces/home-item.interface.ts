@@ -58,3 +58,10 @@ export interface FeatureFlags {
   allowedUsers: string;
 }
 
+export interface HarnessFFEvaluation {
+  flag: string;
+  identifier: string;
+  kind: 'boolean' | 'string' | 'int' | 'json';
+  value: boolean | string | number | object;
+  deleted?: boolean;
+}

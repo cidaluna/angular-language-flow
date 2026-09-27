@@ -1,71 +1,64 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../../../../environments/environment';
-import { FeatureFlags } from '../interfaces/home-item.interface';
+import { FeatureFlags, HarnessFFEvaluation } from '../interfaces/home-item.interface';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class FeatureFlagService {
-  private readonly baseUrl = `${environment.apiBaseUrl}/apiFF`;
-  private flags: FeatureFlags | null = null;
-  readonly ready = signal(false);
+  private readonly http = inject(HttpClient);
+  private readonly baseUrl = `${environment.apiBaseUrl}/apiFFHarness`;
 
-  constructor(private http: HttpClient) {}
+  // Signal que armazena a lista de flags vindas do db.json
+  private flagsSignal = signal<HarnessFFEvaluation[]>([]);
 
-  // Carrega as feature flags antes que a aplicação comece a consulta-las
+  constructor() {}
+
+  // Carrega as feature flags antes que a aplicação comece a consultá-las
   async initialize(): Promise<void> {
     console.log(":: FF Entrou em initialize");
     try {
-      this.flags = await firstValueFrom(this.http.get<FeatureFlags>(this.baseUrl));
-      this.ready.set(true);
-    } catch {
-      this.flags = null;
-      this.ready.set(false);
+      const data = await firstValueFrom(this.http.get<HarnessFFEvaluation[]>(this.baseUrl));
+      console.log(":: FF Entrou em initialize com data = ", data);
+      this.flagsSignal.set(data);
+    } catch (error) {
+      this.flagsSignal.set([]);
+      console.log(':: FF Erro ao carregar Feature Flags do Harness:', error);
     }
-  }
-
-  // Retorna o valor de uma feature flag booleana.
-  getBoolean(flag: keyof FeatureFlags): boolean {
-    console.log(":: FF Entrou em getBoolean com flag = ", flag);
-    return this.flags?.[flag] === true;
   }
 
   // Retorna o valor bruto de uma feature flag string
-  // keyof significa aceito como valor somente uma das chaves existentes no FeatureFlags
-  getString(flag: keyof FeatureFlags): string {
-    console.log(":: FF Entrou em getString com flag = ", flag);
-    const value = this.flags?.[flag];
-    return typeof value === 'string' ? value : '';
+  getStringFlag(flagKey: string, defaultValue: string = ''): string {
+    const found = this.flagsSignal().find(f => f.flag === flagKey && f.kind === 'string');
+    console.log(":: FF Entrou em getStringFlag com flagKey = ", flagKey +" e found = ", found);
+    return found && typeof found.value === 'string' ? found.value : defaultValue;
   }
 
-  // Converte uma feature flag string contendo um JSON em uma lista segura de strings.
-  // keyof significa aceito como valor somente uma das chaves existentes no FeatureFlags.
-  getStringArray(flag: keyof FeatureFlags): string[] {
-    const value = this.getString(flag);
+  // Verifica se o usuario informado/logado está no array de logons vinda da feature flag string.
+  isLogonEnabled(flagKey: string, currentLogon: string): boolean {
+    console.log(":: FF Entrou em isLogonEnabled com flagKey = ", flagKey +" e currentLogon = ", currentLogon);
+    const found = this.flagsSignal().find(f => f.flag === flagKey && f.kind === 'string');
 
-    if (!value){
-      return [];
+    if (!found || typeof found.value !== 'string'){
+      return false;
     }
-    console.log(":: FF Entou no getStringArray com value = ", value);
 
     try {
-      const parsed: unknown = JSON.parse(value);
-      console.log(":: FF Entou no getStringArray e aplicou o parse = ", parsed);
-      return Array.isArray(parsed) && parsed.every(item => typeof item === 'string') ? parsed : [];
-    } catch {
-      return [];
+      // Como o valor da string no db.json é um array em formato string "['Item']", fazemos o parse
+      const allowedUsers: string [] = JSON.parse(found.value);
+      console.log(":: FF Entrou no try isLogonEnabled com allowedUsers = ", allowedUsers);
+
+      if (Array.isArray(allowedUsers)) {
+        return allowedUsers
+          .map(user => user.trim().toLowerCase())
+          .includes(currentLogon.trim().toLowerCase());
+      }
+    } catch (error) {
+      // Fallback caso a string não seja um JSON válido, tenta quebrar por vírgula básica
+      const allowedUsers = found.value.split(',').map(user => user.trim().toLowerCase());
+      return allowedUsers.includes(currentLogon.trim().toLocaleLowerCase());
     }
-  }
-
-  // Verifica se o usuario informado/logado está autorizado na lista de logons vinda da feature flag string em allowedUsers.
-  isUserAllowed(logon: string): boolean {
-    console.log(":: FF Entrou no isUserAllowed com logon = ", logon);
-    const allowedUsers = this.getStringArray('allowedUsers'); // nome do campo que vem da api
-    console.log(":: FF Entrou no isUserAllowed com a lista allowedUsers = ", allowedUsers);
-
-    return allowedUsers.some(
-      user => user.trim().toLocaleLowerCase() === logon.trim().toLocaleLowerCase()
-    );
+    return false;
   }
 
 }

@@ -8,6 +8,11 @@
  *      - Retorna
  *
  *
+ * * GET  /apiFFHarness
+ *      - Retorna o array de evaluations de feature flags no formato
+ *        do Harness FF (flag, identifier, kind, value)
+ *
+ *
  * GET  /apiHomeItems
  *      - Recebe Accept-Language
  *      - Retorna somente o bloco correspondente ao idioma
@@ -193,6 +198,59 @@ app.get('/apiFF', (req, res) => {
 });
 
 
+
+// -----------------------------------------------------------------------------
+// GET /apiFFHarness
+//
+// Retorna o array de evaluations de feature flags no formato do Harness FF
+// (o mesmo shape que o SDK real devolve numa bulk evaluation).
+//
+// Cada item segue:
+//   {
+//     flag: string,                 // identificador da flag
+//     identifier: string,           // identificador da variação retornada
+//     kind: 'boolean' | 'string',   // tipo declarado da flag
+//     value: boolean | string       // valor da variação
+//   }
+//
+// Diferente do /apiFF (objeto único, formato antigo), aqui devolvemos a
+// lista como o Harness devolveria numa consulta de bulk evaluation contra
+// um target — é esse formato que a interface deve passar a consumir daqui
+// pra frente.
+// -----------------------------------------------------------------------------
+
+app.get('/apiFFHarness', (req, res) => {
+  console.log(
+    ':: [Server] GET /apiFFHarness'
+  );
+
+  try {
+    const dbData = readDb();
+
+    const featureFlags = Array.isArray(dbData.apiFFHarness)
+      ? dbData.apiFFHarness
+      : [];
+
+    console.log(
+      ':: [Server] evaluations retornadas:',
+      featureFlags
+    );
+
+    return res.status(200).json(featureFlags);
+
+  } catch (error) {
+    console.error(
+      ':: [Server Error] Falha ao ler evaluations de feature flags:',
+      error
+    );
+
+    return res.status(500).json({
+      message: 'Erro interno ao consultar as feature flags do Harness.'
+    });
+  }
+});
+
+
 // -----------------------------------------------------------------------------
 // GET /apiHomeItems
 //
@@ -370,6 +428,10 @@ app.listen(PORT, () => {
 
   console.log(
     `:: [Server] GET  /apiFF`
+  );
+
+  console.log(
+    `:: [Server] GET  /apiFFHarness`
   );
 
   console.log(
