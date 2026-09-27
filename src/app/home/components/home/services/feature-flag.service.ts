@@ -17,14 +17,13 @@ export class FeatureFlagService {
 
   // Carrega as feature flags antes que a aplicação comece a consultá-las
   async initialize(): Promise<void> {
-    console.log(":: FF Entrou em initialize");
     try {
       const data = await firstValueFrom(this.http.get<HarnessFFEvaluation[]>(this.baseUrl));
-      console.log(":: FF Entrou em initialize com data = ", data);
+      console.log(":: FF Entrou em initialize recupera todas as FF com data = ", data);
       this.flagsSignal.set(data ?? []);
     } catch (error) {
       this.flagsSignal.set([]);
-      console.log(':: FF Erro ao carregar Feature Flags do Harness:', error);
+      console.log(':: FF Erro ao carregar Feature Flags initialize', error);
     }
   }
 
@@ -38,7 +37,7 @@ export class FeatureFlagService {
 
   // Verifica se o usuário atual está na lista de logons separados por vírgula.
   isUserAllowed(flagKey: string, currentLogon: string): boolean {
-    console.log(':: FF isLogonEnabled - flagKey:', flagKey, '| currentLogon:', currentLogon);
+    console.log(':: FF isUserAllowed com flagKey:', flagKey, ', e currentLogon:', currentLogon);
 
     const stringList = this.getStringFlag(flagKey);
     if (!stringList) return false;
@@ -48,8 +47,31 @@ export class FeatureFlagService {
 
     // isValueInList normaliza (trim + lowercase) cada item antes de comparar
     const verify = isValueInList(logonsArray, currentLogon);
-    console.log(":: FF verify = ", verify);
+    console.log(":: FF isUserAllowed com verify = ", verify);
     return verify;
   }
 
+  // Retorna o valor bruto de uma feature flag booleana. Começa como false
+  // por padrão; passa a ser controlada via esteira quando a flag for
+  // cadastrada no Harness com kind: "boolean".
+  getBooleanFlag(flagKey: string, defaultValue: boolean = false): boolean {
+    const evaluation = this.flagsSignal().find(f => f.flag === flagKey && f.kind === 'boolean');
+    console.log(':: FF BOOLEAN - getBooleanFlag - flagKey:', flagKey, ' | evaluation:', evaluation);
+
+    return evaluation && typeof evaluation.value === 'boolean' ? evaluation.value : defaultValue;
+  }
+
+  // Simula a esteira DevSecOps atualizando o valor de uma flag booleana
+  // em runtime — sem precisar de novo deploy.
+  setBooleanFlag(flagKey: string, newValue: boolean): void {
+    console.log(':: FF BOOLEAN - setBooleanFlag - flagKey:', flagKey, ' | newValue:', newValue);
+
+    this.flagsSignal.update((currentFlags) =>
+      currentFlags.map((flag) =>
+        flag.flag === flagKey && flag.kind === 'boolean'
+          ? { ...flag, value: newValue }
+          : flag
+      )
+    );
+  }
 }

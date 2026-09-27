@@ -121,6 +121,17 @@ export class Home {
     return this.ffService.isUserAllowed('FF_0202_SHOW_CARDS', this.currentUser())
   });
 
+  // Computed: só LÊ o estado atual da flag — reage automaticamente
+  // quando flagsSignal mudar (por causa do setBooleanFlag em outro lugar)
+  protected readonly canShowText = computed(() => {
+    return this.ffService.getBooleanFlag('FF_0101_SHOW_NEW_TEXT');
+  });
+
+  // Simula a esteira ligando a flag — chamado por um evento, não pelo computed
+  ativarFlag(): void {
+    this.ffService.setBooleanFlag('FF_0101_SHOW_NEW_TEXT', true);
+  }
+
   // Simulando usuários permitidos e não permitidos
   // protected changeUser(event: Event): void {
   //   const element = event.target as HTMLSelectElement;

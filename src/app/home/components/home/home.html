@@ -25,9 +25,13 @@
     </div>
   } @else if (successData(); as data) {
     <section class="home__about">
-      <p class="home__greeting">
-        {{ 'home.greeting' | transloco: { nome: userName, qtd: messageCount } }}
-      </p>
+      <button (click)="ativarFlag()">Simular flag boolean ON</button>
+
+      @if (canShowText()) {
+        <p class="home__greeting">
+          {{ 'home.greeting' | transloco: { nome: userName, qtd: messageCount } }}
+        </p>
+      }
       <h1 id="home-main-title" class="home__title">
         {{ 'home.title' | transloco }}
       </h1>

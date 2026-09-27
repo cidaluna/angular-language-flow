@@ -5,10 +5,10 @@
   },
   "apiFFHarness": [
     {
-      "flag": "FF_0101_NEW_DASHBOARD",
-      "identifier": "true",
+      "flag": "FF_0101_SHOW_NEW_TEXT",
+      "identifier": "teste",
       "kind": "boolean",
-      "value": true
+      "value": false
     },
     {
       "flag": "FF_0202_SHOW_CARDS",
