@@ -14,7 +14,7 @@
       "flag": "FF_0202_SHOW_CARDS",
       "identifier": "logons_liberados",
       "kind": "string",
-      "value": "[\"Cida\",\"João\",\"JCS1234\",\"Bernadete123\"]"
+      "value": "Cida, João,PedRO, pri@email.com,teste@teste.com, JCS1234, Bernadete, JCS270926"
     }
   ],
   "apiLanguagePreference": [],

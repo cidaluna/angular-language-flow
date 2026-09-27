@@ -3,6 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { environment } from '../../../../../environments/environment';
 import { FeatureFlags, HarnessFFEvaluation } from '../interfaces/home-item.interface';
 import { firstValueFrom } from 'rxjs';
+import { isValueInList } from '../../../../shared/utils/string.utils';
 
 @Injectable({ providedIn: 'root' })
 export class FeatureFlagService {
@@ -10,7 +11,7 @@ export class FeatureFlagService {
   private readonly baseUrl = `${environment.apiBaseUrl}/apiFFHarness`;
 
   // Signal que armazena a lista de flags vindas do db.json
-  private flagsSignal = signal<HarnessFFEvaluation[]>([]);
+  private readonly flagsSignal = signal<HarnessFFEvaluation[]>([]);
 
   constructor() {}
 
@@ -20,45 +21,35 @@ export class FeatureFlagService {
     try {
       const data = await firstValueFrom(this.http.get<HarnessFFEvaluation[]>(this.baseUrl));
       console.log(":: FF Entrou em initialize com data = ", data);
-      this.flagsSignal.set(data);
+      this.flagsSignal.set(data ?? []);
     } catch (error) {
       this.flagsSignal.set([]);
       console.log(':: FF Erro ao carregar Feature Flags do Harness:', error);
     }
   }
 
-  // Retorna o valor bruto de uma feature flag string
+  // Retorna o valor bruto de uma feature flag string solicitada
   getStringFlag(flagKey: string, defaultValue: string = ''): string {
-    const found = this.flagsSignal().find(f => f.flag === flagKey && f.kind === 'string');
-    console.log(":: FF Entrou em getStringFlag com flagKey = ", flagKey +" e found = ", found);
-    return found && typeof found.value === 'string' ? found.value : defaultValue;
+    const evaluation = this.flagsSignal().find(f => f.flag === flagKey && f.kind === 'string');
+    console.log(':: FF getStringFlag - flagKey:', flagKey, '| evaluation:', evaluation);
+
+    return evaluation && typeof evaluation.value === 'string' ? evaluation.value : defaultValue;
   }
 
-  // Verifica se o usuario informado/logado está no array de logons vinda da feature flag string.
-  isLogonEnabled(flagKey: string, currentLogon: string): boolean {
-    console.log(":: FF Entrou em isLogonEnabled com flagKey = ", flagKey +" e currentLogon = ", currentLogon);
-    const found = this.flagsSignal().find(f => f.flag === flagKey && f.kind === 'string');
+  // Verifica se o usuário atual está na lista de logons separados por vírgula.
+  isUserAllowed(flagKey: string, currentLogon: string): boolean {
+    console.log(':: FF isLogonEnabled - flagKey:', flagKey, '| currentLogon:', currentLogon);
 
-    if (!found || typeof found.value !== 'string'){
-      return false;
-    }
+    const stringList = this.getStringFlag(flagKey);
+    if (!stringList) return false;
 
-    try {
-      // Como o valor da string no db.json é um array em formato string "['Item']", fazemos o parse
-      const allowedUsers: string [] = JSON.parse(found.value);
-      console.log(":: FF Entrou no try isLogonEnabled com allowedUsers = ", allowedUsers);
+    // Transforma a string do Harness "Cida, João, UBS1234" num array de strings
+    const logonsArray = stringList.split(',');
 
-      if (Array.isArray(allowedUsers)) {
-        return allowedUsers
-          .map(user => user.trim().toLowerCase())
-          .includes(currentLogon.trim().toLowerCase());
-      }
-    } catch (error) {
-      // Fallback caso a string não seja um JSON válido, tenta quebrar por vírgula básica
-      const allowedUsers = found.value.split(',').map(user => user.trim().toLowerCase());
-      return allowedUsers.includes(currentLogon.trim().toLocaleLowerCase());
-    }
-    return false;
+    // isValueInList normaliza (trim + lowercase) cada item antes de comparar
+    const verify = isValueInList(logonsArray, currentLogon);
+    console.log(":: FF verify = ", verify);
+    return verify;
   }
 
 }
