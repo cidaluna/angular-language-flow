@@ -12,9 +12,15 @@
     },
     {
       "flag": "FF_0202_SHOW_CARDS",
-      "identifier": "logons_liberados",
+      "identifier": "variation_on",
       "kind": "string",
       "value": "Cida, João,PedRO, pri@email.com,teste@teste.com, JCS1234, Bernadete, JCS270926"
+    },
+    {
+      "flag": "FF_0202_SHOW_CARDS",
+      "identifier": "variation_off",
+      "kind": "string",
+      "value": "ofF"
     }
   ],
   "apiLanguagePreference": [],

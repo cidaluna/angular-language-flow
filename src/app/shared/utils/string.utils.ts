@@ -7,7 +7,9 @@
  * diferentes (Harness FF, header HTTP, input do usuário).
  */
 export function normalizeString(value: string): string {
-  return value.trim().toLowerCase();
+  const formatString = value.trim().toLowerCase();
+  console.log(":: UTILS entrou no normalizeString e formatou para = ", formatString);
+  return formatString;
 }
 
 /**

@@ -17,7 +17,7 @@ import { FeatureFlagService } from './services/feature-flag.service';
 export class Home {
   private store = inject(Store);
   private readonly ffService = inject(FeatureFlagService);
-  protected currentUser = signal(' pri@email.com ');
+  protected currentUser = signal('JCS1234');
 
   protected items = toSignal(this.store.select(HomeLanguageState.items), { initialValue: [] });
   protected loading = toSignal(this.store.select(HomeLanguageState.loading), {
@@ -118,7 +118,7 @@ export class Home {
 
   // Computed atualiza automaticamente quando as flags terminarem de carregar ou o usuário mudar
   protected readonly canShowCards = computed(() => {
-    return this.ffService.isUserAllowed('FF_0202_SHOW_CARDS', this.currentUser())
+    return this.ffService.isLogonEnabled('FF_0202_SHOW_CARDS', this.currentUser())
   });
 
   // Computed: só LÊ o estado atual da flag — reage automaticamente
