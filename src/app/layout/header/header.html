@@ -1,7 +1,9 @@
 <header class="app-header">
-  <span class="app-header__brand">{{ 'header.brand' | transloco }}</span>
+  <span class="app-header__brand" id="header-brand">{{ 'header.brand' | transloco }}</span>
+  <span class="app-header__brand" id="header-about">{{ 'header.about' | transloco }}</span>
+  <span class="app-header__brand" id="header-contact">{{ 'header.contact' | transloco }}</span>
 
-  <div class="app-header__controls">
+  <div class="app-header__controls" id="header-language-selector">
     <label class="app-header__field">
       {{ 'header.languageLabel' | transloco }}
       <select

@@ -1,0 +1,250 @@
+:host {
+  --walkthrough-primary-color: #005eb8;
+  --walkthrough-primary-hover-color: #004a91;
+
+  --walkthrough-background-color: #ffffff;
+  --walkthrough-text-color: #1f2937;
+  --walkthrough-secondary-text-color: #6b7280;
+
+  --walkthrough-border-radius: 8px;
+
+  --walkthrough-width: 360px;
+  --walkthrough-height: 180px;
+}
+
+/**
+ * Camada escura que cobre a aplicação.
+ *
+ * O z-index fica abaixo do spotlight e da caixa
+ * explicativa.
+ */
+.walkthrough-overlay {
+  position: fixed;
+  inset: 0;
+
+  background: rgb(0 0 0 / 55%);
+
+  z-index: 1000;
+}
+
+/**
+ * Elemento responsável pelo destaque visual
+ * do componente atual.
+ */
+.walkthrough-spotlight {
+  position: fixed;
+
+  background: transparent;
+
+  border: 2px solid var(--walkthrough-primary-color);
+
+  border-radius: 6px;
+
+  box-shadow:
+    0 0 0 9999px rgb(0 0 0 / 55%),
+    0 0 12px rgb(0 94 184 / 40%);
+
+  pointer-events: none;
+
+  z-index: 1001;
+
+  transition:
+    top 200ms ease,
+    left 200ms ease,
+    width 200ms ease,
+    height 200ms ease;
+}
+
+/**
+ * Caixa principal que apresenta o conteúdo
+ * do step atual.
+ */
+.walkthrough-step {
+  position: fixed;
+
+  min-height: var(--walkthrough-height);
+
+  box-sizing: border-box;
+
+  padding: 20px;
+
+  background: var(--walkthrough-background-color);
+
+  border-radius: var(--walkthrough-border-radius);
+
+  box-shadow:
+    0 8px 24px rgb(0 0 0 / 20%);
+
+  z-index: 1002;
+
+  color: var(--walkthrough-text-color);
+
+  transition:
+    top 200ms ease,
+    left 200ms ease;
+}
+
+/**
+ * Cabeçalho contendo contador e botão fechar.
+ */
+.walkthrough-header {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  margin-bottom: 12px;
+}
+
+/**
+ * Indicador "1 de 3".
+ */
+.walkthrough-counter {
+  font-size: 12px;
+
+  font-weight: 600;
+
+  color: var(--walkthrough-secondary-text-color);
+}
+
+/**
+ * Botão para fechar o walkthrough.
+ */
+.walkthrough-close {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+
+  font-size: 24px;
+
+  line-height: 1;
+
+  cursor: pointer;
+
+  color: var(--walkthrough-secondary-text-color);
+}
+
+/**
+ * Área de conteúdo textual.
+ */
+.walkthrough-content {
+  margin-bottom: 20px;
+}
+
+/**
+ * Título do step.
+ */
+.walkthrough-title {
+  margin: 0 0 8px;
+
+  font-size: 18px;
+
+  font-weight: 700;
+}
+
+/**
+ * Texto explicativo.
+ */
+.walkthrough-description {
+  margin: 0;
+
+  font-size: 14px;
+
+  line-height: 1.5;
+
+  color: var(--walkthrough-secondary-text-color);
+}
+
+/**
+ * Rodapé contendo os botões de navegação.
+ */
+.walkthrough-footer {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: flex-end;
+
+  gap: 8px;
+}
+
+/**
+ * Estilo base dos botões.
+ */
+.walkthrough-button {
+  min-width: 88px;
+
+  padding: 8px 16px;
+
+  border-radius: 6px;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+/**
+ * Botão secundário.
+ */
+.walkthrough-button-secondary {
+  border: 1px solid #d1d5db;
+
+  background: #ffffff;
+
+  color: var(--walkthrough-text-color);
+}
+
+/**
+ * Botão principal azul.
+ */
+.walkthrough-button-primary {
+  border: 1px solid var(--walkthrough-primary-color);
+
+  background: var(--walkthrough-primary-color);
+
+  color: #ffffff;
+}
+
+/**
+ * Estado hover do botão principal.
+ */
+.walkthrough-button-primary:hover {
+  background: var(--walkthrough-primary-hover-color);
+}
+
+/**
+ * Estado disabled.
+ */
+.walkthrough-button:disabled {
+  opacity: 0.5;
+
+  cursor: not-allowed;
+}
+
+/**
+ * Ajuste para telas pequenas.
+ */
+@media (max-width: 600px) {
+
+  .walkthrough-step {
+    width: calc(100vw - 32px) !important;
+
+    min-height: auto;
+
+    left: 16px !important;
+  }
+}

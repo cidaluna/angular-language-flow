@@ -1,1 +1,103 @@
-<p>walkthrough works!</p>
+@if (show() && currentStep()) {
+
+  <!--
+    Camada responsável por escurecer a aplicação
+    enquanto o walkthrough está ativo.
+  -->
+  <div
+    class="walkthrough-overlay"
+    aria-hidden="true"
+  ></div>
+
+  <!--
+    Spotlight responsável por destacar visualmente
+    o elemento atual da aplicação.
+  -->
+  @if (targetVisible()) {
+    <div
+      class="walkthrough-spotlight"
+      [style]="spotlightStyle()"
+      aria-hidden="true"
+    ></div>
+  }
+
+  <!--
+    Caixa contendo as informações do step atual.
+  -->
+  <section
+    class="walkthrough-step"
+    [style]="stepStyle()"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-labelledby]="'walkthrough-title-' + currentStep()!.id"
+  >
+
+    <header class="walkthrough-header">
+
+      <span class="walkthrough-counter">
+        {{ displayedStepIndex() }} de {{ totalSteps() }}
+      </span>
+
+      <button
+        type="button"
+        class="walkthrough-close"
+        aria-label="Fechar tour"
+        (click)="close()"
+      >
+        ×
+      </button>
+
+    </header>
+
+    <div class="walkthrough-content">
+
+      <h2
+        class="walkthrough-title"
+        [id]="'walkthrough-title-' + currentStep()!.id"
+      >
+        {{ currentStep()!.title }}
+      </h2>
+
+      <p class="walkthrough-description">
+        {{ currentStep()!.description }}
+      </p>
+
+    </div>
+
+    <footer class="walkthrough-footer">
+
+      <button
+        type="button"
+        class="walkthrough-button walkthrough-button-secondary"
+        [disabled]="stepIndex() === 0"
+        (click)="previous()"
+      >
+        Voltar
+      </button>
+
+      @if (lastStep()) {
+
+        <button
+          type="button"
+          class="walkthrough-button walkthrough-button-primary"
+          (click)="finish()"
+        >
+          Concluir
+        </button>
+
+      } @else {
+
+        <button
+          type="button"
+          class="walkthrough-button walkthrough-button-primary"
+          (click)="next()"
+        >
+          Próximo
+        </button>
+
+      }
+
+    </footer>
+
+  </section>
+}

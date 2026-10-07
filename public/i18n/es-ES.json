@@ -1,6 +1,8 @@
 {
   "header": {
     "brand": "Logo",
+    "about": "Quiénes somos",
+    "contact": "Contacto",
     "languageLabel": "Idioma",
     "simulateError": "Simular error"
   },
