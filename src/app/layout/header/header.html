@@ -1,9 +1,9 @@
 <header class="app-header">
-  <span class="app-header__brand" id="header-brand">{{ 'header.brand' | transloco }}</span>
-  <span class="app-header__brand" id="header-about">{{ 'header.about' | transloco }}</span>
-  <span class="app-header__brand" id="header-contact">{{ 'header.contact' | transloco }}</span>
+  <span class="app-header__brand" id="header-brand" data-walkthrough="reports1">{{ 'header.brand' | transloco }}</span>
+  <span class="app-header__brand" id="header-about" data-walkthrough="reports2">{{ 'header.about' | transloco }}</span>
+  <span class="app-header__brand" id="header-contact" data-walkthrough="reports3">{{ 'header.contact' | transloco }}</span>
 
-  <div class="app-header__controls" id="header-language-selector">
+  <div class="app-header__controls" id="header-language-selector" data-walkthrough="reports4">
     <label class="app-header__field">
       {{ 'header.languageLabel' | transloco }}
       <select
@@ -21,3 +21,8 @@
 
   </div>
 </header>
+<app-walkthrough
+  [steps]="walkthroughSteps"
+  storageKey="home"
+  [show]="true"
+/>
