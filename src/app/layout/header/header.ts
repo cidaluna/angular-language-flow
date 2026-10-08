@@ -1,4 +1,4 @@
-import { Component, inject, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, ViewChild } from '@angular/core';
 import { TranslocoModule } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngxs/store';
@@ -13,6 +13,7 @@ import { Walkthrough } from '../../shared/components/walkthrough/walkthrough';
   imports: [CommonModule, TranslocoModule, Walkthrough],
   templateUrl: './header.html',
   styleUrl: './header.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class Header {
   private store = inject(Store);
@@ -60,29 +61,26 @@ export class Header {
   readonly walkthroughSteps: WalkthroughStep[] = [
 
     {
-      id: 'reports',
-      title: 'Relatórios',
-      description:
-        'Aqui você encontra os relatórios disponíveis para consulta.',
-      target: '[data-walkthrough="reports1"]',
+      id: 'header-about',
+      title: 'Sobre',
+      description: 'Aqui você encontra os dados sobre a nossa empresa',
+      target: '[data-walkthrough="about"]',
       position: 'bottom'
     },
 
     {
-      id: 'products',
-      title: 'Produtos e ofertas',
-      description:
-        'Nesta área você pode consultar produtos e ofertas disponíveis para o seu perfil.',
-      target: '[data-walkthrough="reports2"]',
+      id: 'header-contact',
+      title: 'Contato',
+      description: 'Nesta área você pode encontrar as opções de entrar em contato conosco.',
+      target: '[data-walkthrough="contact"]',
       position: 'bottom'
     },
 
     {
-      id: 'help',
-      title: 'Precisa de ajuda?',
-      description:
-        'Use este botão sempre que precisar encontrar informações ou suporte.',
-      target: '[data-walkthrough="reports3"]',
+      id: 'header-language',
+      title: 'Troca de idioma',
+      description: 'Use este botão sempre que precisar alterar o idioma do seu relatório.',
+      target: '[data-walkthrough="language"]',
       position: 'left'
     }
 

@@ -10,6 +10,9 @@
 
   --walkthrough-width: 360px;
   --walkthrough-height: 180px;
+
+  --wt-dot-active: #e91e63; // rosa: step já alcançado
+  --wt-dot-inactive: #c9c9c9; // cinza claro: step ainda não visitado
 }
 
 /**
@@ -97,154 +100,172 @@
   margin-bottom: 12px;
 }
 
-/**
- * Indicador "1 de 3".
- */
-.walkthrough-counter {
-  font-size: 12px;
 
-  font-weight: 600;
-
-  color: var(--walkthrough-secondary-text-color);
-}
-
-/**
+  /**
  * Botão para fechar o walkthrough.
  */
-.walkthrough-close {
-  display: flex;
+  .walkthrough-close {
+    display: flex;
 
-  align-items: center;
+    align-items: center;
 
-  justify-content: center;
+    justify-content: center;
 
-  width: 28px;
-  height: 28px;
+    width: 28px;
+    height: 28px;
 
-  padding: 0;
+    padding: 0;
 
-  border: 0;
+    border: 0;
 
-  background: transparent;
+    background: transparent;
 
-  font-size: 24px;
+    font-size: 24px;
 
-  line-height: 1;
+    line-height: 1;
 
-  cursor: pointer;
+    cursor: pointer;
 
-  color: var(--walkthrough-secondary-text-color);
-}
+    color: var(--walkthrough-secondary-text-color);
+  }
 
-/**
+  /**
  * Área de conteúdo textual.
  */
-.walkthrough-content {
-  margin-bottom: 20px;
-}
+  .walkthrough-content {
+    margin-bottom: 20px;
+  }
 
-/**
+  /**
  * Título do step.
  */
-.walkthrough-title {
-  margin: 0 0 8px;
+  .walkthrough-title {
+    min-width: 0;
+    margin: 0 0 8px;
 
-  font-size: 18px;
+    font-size: 18px;
 
-  font-weight: 700;
-}
+    font-weight: 700;
+  }
 
-/**
+  /**
  * Texto explicativo.
  */
-.walkthrough-description {
-  margin: 0;
+  .walkthrough-description {
+    margin: 0;
 
-  font-size: 14px;
+    font-size: 14px;
 
-  line-height: 1.5;
+    line-height: 1.5;
 
-  color: var(--walkthrough-secondary-text-color);
-}
+    color: var(--walkthrough-secondary-text-color);
+  }
 
-/**
+  .walkthrough-card {
+    &__progress {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    &__dots {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    &__dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--wt-dot-inactive);
+      transition: background 0.2s ease;
+
+      &--active {
+        background: var(--wt-dot-active);
+      }
+    }
+  }
+
+  /**
  * Rodapé contendo os botões de navegação.
  */
-.walkthrough-footer {
-  display: flex;
+  .walkthrough-footer {
+    display: flex;
 
-  align-items: center;
+    align-items: center;
 
-  justify-content: flex-end;
+    justify-content: space-between;
 
-  gap: 8px;
-}
+    gap: 8px;
+  }
 
-/**
+  /**
  * Estilo base dos botões.
  */
-.walkthrough-button {
-  min-width: 88px;
+  .walkthrough-button {
+    min-width: 88px;
 
-  padding: 8px 16px;
+    padding: 8px 16px;
 
-  border-radius: 6px;
+    border-radius: 6px;
 
-  font-size: 14px;
+    font-size: 14px;
 
-  font-weight: 600;
+    font-weight: 600;
 
-  cursor: pointer;
-}
+    cursor: pointer;
+  }
 
-/**
+  /**
  * Botão secundário.
  */
-.walkthrough-button-secondary {
-  border: 1px solid #d1d5db;
+  .walkthrough-button-secondary {
+    border: 1px solid #d1d5db;
 
-  background: #ffffff;
+    background: #ffffff;
 
-  color: var(--walkthrough-text-color);
-}
+    color: var(--walkthrough-text-color);
+  }
 
-/**
+  /**
  * Botão principal azul.
  */
-.walkthrough-button-primary {
-  border: 1px solid var(--walkthrough-primary-color);
+  .walkthrough-button-primary {
+    border: 1px solid var(--walkthrough-primary-color);
 
-  background: var(--walkthrough-primary-color);
+    background: var(--walkthrough-primary-color);
 
-  color: #ffffff;
-}
+    color: #ffffff;
+  }
 
-/**
+  /**
  * Estado hover do botão principal.
  */
-.walkthrough-button-primary:hover {
-  background: var(--walkthrough-primary-hover-color);
-}
+  .walkthrough-button-primary:hover {
+    background: var(--walkthrough-primary-hover-color);
+  }
 
-/**
+  /**
  * Estado disabled.
  */
-.walkthrough-button:disabled {
-  opacity: 0.5;
+  .walkthrough-button:disabled {
+    opacity: 0.5;
 
-  cursor: not-allowed;
-}
+    cursor: not-allowed;
+  }
 
-/**
+  /**
  * Ajuste para telas pequenas.
  */
-@media (max-width: 600px) {
+  @media (max-width: 600px) {
 
-  .walkthrough-step {
-    width: calc(100vw - 32px) !important;
+    .walkthrough-step {
+      width: calc(100vw - 32px) !important;
 
-    min-height: auto;
+      min-height: auto;
 
-    left: 16px !important;
+      left: 16px !important;
+    }
   }
-}

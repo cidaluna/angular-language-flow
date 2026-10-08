@@ -142,7 +142,10 @@ export class Walkthrough {
    * pertence ao componente pai.
    */
   open(): void {
+    console.log('🚨🚨🚨 WALKTHROUGH OPEN FOI CHAMADO 🚨🚨🚨');
+
     if (this.hasAlreadySeen()) {
+      console.log('::[Walkthrough] já visualizado');
       return;
     }
 
@@ -170,6 +173,21 @@ export class Walkthrough {
    * é finalizado.
    */
   next(): void {
+    console.log(
+      '::[Walkthrough] stepIndex antes:',
+      this.stepIndex()
+    );
+
+    console.log(
+      '::[Walkthrough] currentStep antes:',
+      this.currentStep()
+    );
+
+    console.log(
+      '::[Walkthrough] lastStep:',
+      this.lastStep()
+    );
+
     if (this.lastStep()) {
       this.finish();
       return;
@@ -186,6 +204,16 @@ export class Walkthrough {
    * O índice nunca fica menor que zero.
    */
   previous(): void {
+    console.log(
+      '::[Walkthrough] entrou no previous - stepIndex antes:',
+      this.stepIndex()
+    );
+
+    console.log(
+      '::[Walkthrough] entrou no previous - currentStep antes:',
+      this.currentStep()
+    );
+
     this.stepIndex.update(index => Math.max(index - 1, 0));
 
     this.updateCurrentTarget();
@@ -272,6 +300,16 @@ export class Walkthrough {
    */
   private findTarget(selector: string): HTMLElement | null {
     const target = document.querySelector(selector);
+
+    console.log(
+      '::[Walkthrough] selector:',
+      selector
+    );
+
+    console.log(
+      '::[Walkthrough] target encontrado:',
+      target
+    );
 
     if (!(target instanceof HTMLElement)) {
       return null;
@@ -470,4 +508,13 @@ export class Walkthrough {
   onEscape(): void {
     this.close();
   }
+
+    /**
+   * Lista de índices [0, 1, 2...] com um item por step.
+   * Resolve: dar ao template algo para iterar e desenhar uma bolinha por passo,
+   * sem criar array dentro do HTML (que seria recriado a cada checagem).
+   */
+  readonly stepDots = computed(() =>
+    Array.from({ length: this.totalSteps() }, (_, index) => index),
+  );
 }

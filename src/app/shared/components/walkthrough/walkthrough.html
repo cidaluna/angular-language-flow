@@ -34,9 +34,24 @@
 
     <header class="walkthrough-header">
 
-      <span class="walkthrough-counter">
-        {{ displayedStepIndex() }} de {{ totalSteps() }}
-      </span>
+      <!-- Início Counter Novo -->
+       <div class="walkthrough-card__progress">
+        <!-- aria-hidden: o texto "1 de 3" já informa o progresso para leitores de tela,
+            então as bolinhas são só reforço visual e não precisam ser lidas -->
+        <span class="walkthrough-card__dots" aria-hidden="true">
+          @for (dot of stepDots(); track dot) {
+            <span
+              class="walkthrough-card__dot"
+              [class.walkthrough-card__dot--active]="dot <= stepIndex()"
+            ></span>
+          }
+        </span>
+
+        <span class="walkthrough-card__counter">
+          {{ stepIndex() + 1 }} de {{ totalSteps() }}
+        </span>
+      </div>
+       <!-- Fim Counter Novo -->
 
       <button
         type="button"
