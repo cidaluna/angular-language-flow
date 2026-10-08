@@ -16,18 +16,23 @@
 }
 
 /**
- * Camada escura que cobre a aplicação.
+ * Camada que cobre a aplicação e bloqueia cliques durante o tour.
  *
- * O z-index fica abaixo do spotlight e da caixa
- * explicativa.
+ * Fica transparente quando existe um elemento destacado, porque nesse caso
+ * quem escurece o resto da tela é o box-shadow do spotlight (deixando o
+ * elemento alvo visível). Só escurece sozinha em steps sem alvo.
  */
 .walkthrough-overlay {
   position: fixed;
   inset: 0;
 
-  background: rgb(0 0 0 / 55%);
+  background: transparent;
 
   z-index: 1000;
+
+  &--dimmed {
+    background: rgb(0 0 0 / 55%);
+  }
 }
 
 /**
@@ -222,7 +227,7 @@
  * Botão secundário.
  */
   .walkthrough-button-secondary {
-    border: 1px solid #d1d5db;
+    border: 1px solid #6b7280;
 
     background: #ffffff;
 
@@ -269,3 +274,36 @@
       left: 16px !important;
     }
   }
+
+/* Texto só para leitor de tela (visualmente oculto). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* O balão recebe foco por script, mas não é interativo: sem anel nele. */
+.walkthrough-step:focus {
+  outline: none;
+}
+
+/* Foco visível, de alto contraste, nos controles interativos. */
+.walkthrough-button:focus-visible,
+.walkthrough-close:focus-visible {
+  outline: 3px solid #0d47a1;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .walkthrough-spotlight,
+  .walkthrough-step,
+  .walkthrough-card__dot {
+    transition: none;
+  }
+}

@@ -1,5 +1,5 @@
 <header class="app-header">
-  <span class="app-header__brand">{{ 'header.brand' | transloco }}</span>
+  <span class="app-header__brand" id="header-brand" >{{ 'header.brand' | transloco }}</span>
   <span class="app-header__about" id="header-about" data-walkthrough="about">{{ 'header.about' | transloco }}</span>
   <span class="app-header__contact" id="header-contact" data-walkthrough="contact">{{ 'header.contact' | transloco }}</span>
 
@@ -12,7 +12,7 @@
         (change)="onLanguageChange($event)"
       >
         @for (lang of languages; track lang) {
-          <option [value]="lang.code">
+          <option [value]="lang.code" data-walkthrough="language-open">
             {{ lang.label }}
           </option>
         }
@@ -25,4 +25,7 @@
   [steps]="walkthroughSteps"
   storageKey="header"
   [show]="true"
+  [markSeenOnSkip]="false"
 />
+<!-- Opção B: pular NÃO salva; só "Concluir" salva -->
+

@@ -82,6 +82,14 @@ export class Header {
       description: 'Use este botão sempre que precisar alterar o idioma do seu relatório.',
       target: '[data-walkthrough="language"]',
       position: 'left'
+    },
+
+    {
+      id: 'header-language-open',
+      title: 'Escolha o idioma',
+      description: 'Use uma das opções para experimentar o seu relatório no idioma selecionado.',
+      target: '[data-walkthrough="language-open"]',
+      position: 'bottom'
     }
 
   ];

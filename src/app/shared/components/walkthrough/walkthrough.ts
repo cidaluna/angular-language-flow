@@ -6,9 +6,11 @@ import {
   inject,
   input,
   model,
-  signal
+  output,
+  signal,
+  viewChild
 } from '@angular/core';
-import { WalkthroughPosition, WalkthroughStep } from './walkthrough.type';
+import { WalkthroughEvent, WalkthroughPosition, WalkthroughStep } from './walkthrough.type';
 
   const WALKTHROUGH_WIDTH = 360;
   const WALKTHROUGH_HEIGHT = 180;
@@ -25,6 +27,27 @@ import { WalkthroughPosition, WalkthroughStep } from './walkthrough.type';
 export class Walkthrough {
 
   private readonly elementRef = inject(ElementRef);
+  onCardKeydown(event: Event){
+    console.log('Clicou ');
+  }
+
+  /** Emite eventos tipados para o componente pai enviar às métricas. */
+  readonly walkthroughEvent = output<WalkthroughEvent>();
+
+  /** Referência ao balão, usada para mover o foco e prender o TAB. */
+  private readonly card = viewChild<ElementRef<HTMLElement>>('card');
+
+  /** Elemento que tinha o foco antes do tour abrir, para devolvê-lo ao fechar. */
+  private previouslyFocused: HTMLElement | null = null;
+
+  /** Evita cliques rápidos disparando duas trocas de step ao mesmo tempo. */
+  private isChangingStep = false;
+
+  /** Ids únicos para ligar o balão ao título/descrição (aria-labelledby/describedby). */
+  private static instanceCounter = 0;
+  private readonly instanceId = Walkthrough.instanceCounter++;
+  protected readonly titleId = `walkthrough-title-${this.instanceId}`;
+  protected readonly descriptionId = `walkthrough-description-${this.instanceId}`;
 
   /**
    * Controla se o walkthrough está aberto ou fechado.
@@ -84,6 +107,23 @@ export class Walkthrough {
    */
   readonly storageKey = input.required<string>();
 
+    /**
+   * Indica se estamos no primeiro passo.
+   * Resolve: o template decidir entre "Voltar" e "Pular tour" sem repetir
+   * a comparação `stepIndex() === 0` em vários lugares.
+   */
+  readonly firstStep = computed(() => this.stepIndex() === 0);
+
+  /**
+   * Define se pular o tour conta como "já viu".
+   *
+   * Por padrão, pular registra no navegador que o usuário já
+   * visualizou o walkthrough, respeitando a decisão dele de não ver.
+   * O componente pai pode desligar isso se quiser que o tour volte
+   * até ser concluído.
+   */
+  readonly markSeenOnSkip = input(true);
+
   /**
    * Define se o componente deve fechar automaticamente
    * quando o usuário chegar ao último step.
@@ -141,7 +181,11 @@ export class Walkthrough {
    * A regra de negócio sobre QUANDO chamar esse método
    * pertence ao componente pai.
    */
-  open(): void {
+  open(force = false): void {
+    if (!force && this.hasAlreadySeen()) {
+      console.log('::[Walkthrough] já visualizado');
+      return;
+    }
     console.log('🚨🚨🚨 WALKTHROUGH OPEN FOI CHAMADO 🚨🚨🚨');
 
     if (this.hasAlreadySeen()) {
@@ -217,6 +261,27 @@ export class Walkthrough {
     this.stepIndex.update(index => Math.max(index - 1, 0));
 
     this.updateCurrentTarget();
+  }
+
+  /**
+   * Usuário desistiu do tour (botão "Pular", "Pular tour" ou ESC).
+   *
+   * Resolve: fechar o walkthrough e, conforme a regra definida pelo
+   * componente pai em markSeenOnSkip, lembrar que ele não quer vê-lo
+   * de novo. Todo caminho de desistência passa por aqui, então a regra
+   * do storage fica em um único lugar.
+   */
+  skip(): void {
+    console.log('::[Walkthrough] skip', {
+      stepIndex: this.stepIndex(),
+      persisted: this.markSeenOnSkip()
+    });
+
+    if (this.markSeenOnSkip()) {
+      this.markAsSeen();
+    }
+
+    this.close();
   }
 
   /**
