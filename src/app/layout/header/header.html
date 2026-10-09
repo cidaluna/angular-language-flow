@@ -1,31 +1,27 @@
-<header class="app-header">
-  <span class="app-header__brand" id="header-brand" >{{ 'header.brand' | transloco }}</span>
-  <span class="app-header__about" id="header-about" data-walkthrough="about">{{ 'header.about' | transloco }}</span>
-  <span class="app-header__contact" id="header-contact" data-walkthrough="contact">{{ 'header.contact' | transloco }}</span>
+@if (isLoading()) {
+<div class="loading">Carregando dados da tela...</div>
+} @else {
+<header class="app-header app-layout">
+  <span class="app-header__brand" id="header-brand">{{ 'header.brand' | transloco }}</span>
+  <span class="app-header__about" id="btn-sobre">{{ 'header.about' | transloco }}</span>
+  <span class="app-header__contact" id="btn-contato">{{ 'header.contact' | transloco }}</span>
 
-  <div class="app-header__controls" id="header-language" data-walkthrough="language">
+  <div class="app-header__controls dropdown" id="drop-idioma">
     <label class="app-header__field">
       {{ 'header.languageLabel' | transloco }}
-      <select
-        class="app-header__select"
-        [value]="currentLang()"
-        (change)="onLanguageChange($event)"
-      >
+      <select class="app-header__select" [value]="currentLang()" (change)="onLanguageChange($event)"
+        (click)="toggleDropdown()">
+        @if (isDropdownOpen()) {
         @for (lang of languages; track lang) {
-          <option [value]="lang.code" data-walkthrough="language-open">
-            {{ lang.label }}
-          </option>
+        <option [value]="lang.code" id="drop-aberto">
+          {{ lang.label }}
+        </option>
+        }
         }
       </select>
     </label>
 
   </div>
 </header>
-<app-walkthrough
-  [steps]="walkthroughSteps"
-  storageKey="header"
-  [show]="true"
-  [markSeenOnSkip]="false"
-/>
-<!-- Opção B: pular NÃO salva; só "Concluir" salva -->
-
+<app-tour-guide />
+}

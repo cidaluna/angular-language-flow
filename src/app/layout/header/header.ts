@@ -1,21 +1,21 @@
-import { ChangeDetectionStrategy, Component, inject, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { TranslocoModule } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngxs/store';
 import { ChangeLanguage } from '../../home/components/home/state/home-language.actions';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { HomeLanguageState } from '../../home/components/home/state/home-language.state';
-import { WalkthroughStep } from '../../shared/components/walkthrough/walkthrough.type';
-import { Walkthrough } from '../../shared/components/walkthrough/walkthrough';
+import { TourGuide } from '../../shared/components/tour-guide/tour-guide';
+import { TourGuideService } from '../../shared/components/tour-guide/tour-guide.service';
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, TranslocoModule, Walkthrough],
+  imports: [CommonModule, TranslocoModule, TourGuide],
   templateUrl: './header.html',
   styleUrl: './header.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class Header {
+export class Header implements OnInit {
   private store = inject(Store);
   protected currentLang = toSignal(this.store.select(HomeLanguageState.currentLang), { initialValue: 'pt-BR' });
 
@@ -25,6 +25,7 @@ export class Header {
     { code: 'en-US', label: 'English' },
     { code: 'es-ES', label: 'Español' }
   ];
+
 
   /**
    * O Header não salva preferência diretamente.
@@ -42,66 +43,48 @@ export class Header {
     this.store.dispatch(new ChangeLanguage(selectedLanguage));
   }
 
+  private tourService = inject(TourGuideService);
 
-  /**
-   * Referência para o componente genérico de walkthrough.
-   *
-   * A Home controla quando o tour deve começar.
-   */
-  @ViewChild(Walkthrough)
-  private walkthrough?: Walkthrough;
+  readonly isLoading = signal<boolean>(true);
+  readonly isDropdownOpen = signal<boolean>(false);
 
-  /**
-   * Define os steps específicos desta tela.
-   *
-   * O componente Walkthrough apenas recebe esses dados
-   * e não conhece nenhuma regra de negócio relacionada
-   * à Home.
-   */
-  readonly walkthroughSteps: WalkthroughStep[] = [
-
-    {
-      id: 'header-about',
-      title: 'Sobre',
-      description: 'Aqui você encontra os dados sobre a nossa empresa',
-      target: '[data-walkthrough="about"]',
-      position: 'bottom'
-    },
-
-    {
-      id: 'header-contact',
-      title: 'Contato',
-      description: 'Nesta área você pode encontrar as opções de entrar em contato conosco.',
-      target: '[data-walkthrough="contact"]',
-      position: 'bottom'
-    },
-
-    {
-      id: 'header-language',
-      title: 'Troca de idioma',
-      description: 'Use este botão sempre que precisar alterar o idioma do seu relatório.',
-      target: '[data-walkthrough="language"]',
-      position: 'left'
-    },
-
-    {
-      id: 'header-language-open',
-      title: 'Escolha o idioma',
-      description: 'Use uma das opções para experimentar o seu relatório no idioma selecionado.',
-      target: '[data-walkthrough="language-open"]',
-      position: 'bottom'
-    }
-
-  ];
-
-  /**
-   * Inicia o walkthrough da Home.
-   *
-   * A regra específica para decidir SE o walkthrough
-   * deve ser aberto poderia futuramente ficar em um
-   * serviço de negócio.
-   */
-  startWalkthrough(): void {
-    this.walkthrough?.open();
+  // Altera programaticamente o estado aberto/fechado da lista de idiomas.
+  toggleDropdown(state?: boolean): void {
+    this.isDropdownOpen.set(state !== undefined ? state : !this.isDropdownOpen());
   }
+
+  ngOnInit(): void {
+    // Configura os 4 passos solicitados pelo roteiro
+    this.tourService.initialize([
+      { id: 'step1', targetId: 'btn-sobre', title: 'Conheça nossa Empresa', description: 'Clique aqui para saber mais sobre a nossa jornada.', position: 'bottom' },
+      { id: 'step2', targetId: 'btn-contato', title: 'Fale Conosco', description: 'Canal direto com nossa equipe de suporte.', position: 'bottom' },
+      {
+        id: 'step3',
+        targetId: 'drop-idioma',
+        title: 'Selecione seu Idioma',
+        description: 'Aqui você pode gerenciar a localização.',
+        position: 'left',
+        beforeShow: () => this.toggleDropdown(false) // Fecha o dropdown se o usuário voltar do step 4
+      },
+      {
+        id: 'step4',
+        targetId: 'drop-aberto',
+        title: 'Escolha uma Opção',
+        description: 'Selecione a linguagem nativa para tradução completa.',
+        position: 'bottom',
+        beforeShow: () => this.toggleDropdown(true),
+        afterHide: () => this.toggleDropdown(false)
+      }
+    ]);
+
+    // Simulação de carregamento de APIs da tela. Quando finaliza, o tour é liberado e iniciado.
+    setTimeout(() => {
+      this.isLoading.set(false);
+      this.tourService.setPageLoaded(true);
+      this.tourService.start();
+    }, 1500);
+  }
+
+
+
 }

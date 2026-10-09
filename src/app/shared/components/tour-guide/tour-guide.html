@@ -1,0 +1,58 @@
+@if (tourService.isActive() && tourService.currentStep(); as step) {
+  <div class="tour-overlay" (click)="tourService.close()"></div>
+
+  <div
+    class="tour-spotlight"
+    [style.top.px]="spotlight().top"
+    [style.left.px]="spotlight().left"
+    [style.width.px]="spotlight().width"
+    [style.height.px]="spotlight().height"
+  ></div>
+
+  <div
+    #tourContainer
+    class="tour-bubble"
+    [class]="'position-' + step.position"
+    [style.top.px]="bubbleTop()"
+    [style.left.px]="bubbleLeft()"
+    role="dialog"
+    aria-modal="true"
+    tabindex="-1"
+    [attr.aria-labelledby]="'tour-title-' + step.id"
+  >
+    <section class="tour-card">
+      <header class="tour-header">
+        <div class="tour-progress">
+          <div class="dots-container">
+            @for (s of tourService.steps(); track s.id; let idx = $index) {
+              <span class="dot" [class.active]="idx <= tourService.currentStepIndex()"></span>
+            }
+          </div>
+          <span class="counter">
+            {{ tourService.currentStepIndex() + 1 }} de {{ tourService.steps().length }}
+          </span>
+        </div>
+        <button class="btn-close" (click)="tourService.close()" aria-label="Fechar tour">&times;</button>
+      </header>
+
+      <div class="tour-content">
+        <h3 [id]="'tour-title-' + step.id">{{ step.title }}</h3>
+        <p>{{ step.description }}</p>
+      </div>
+
+      <footer class="tour-footer">
+        @if (tourService.currentStepIndex() === 0) {
+          <button class="btn-action link" (click)="tourService.skip()">Pular tour</button>
+        } @else {
+          <button class="btn-action link" (click)="tourService.previous()">Voltar</button>
+        }
+
+        @if (tourService.currentStepIndex() === tourService.steps().length - 1) {
+          <button class="btn-action primary" (click)="tourService.complete()">Concluir</button>
+        } @else {
+          <button class="btn-action primary" (click)="tourService.next()">Próximo</button>
+        }
+      </footer>
+    </section>
+  </div>
+}
