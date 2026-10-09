@@ -53,11 +53,11 @@ export class Header implements OnInit {
   ngOnInit(): void {
     // Configura os 4 passos solicitados pelo roteiro
     this.tourService.initialize([
-      { id: 'step1', targetId: 'btn-sobre', title: 'Conheça nossa Empresa', description: 'Clique aqui para saber mais sobre a nossa jornada.', position: 'bottom' },
+      { id: 'step1', targetId: 'btn-sobre', title: 'Conheça nossa Empresa', description: 'Clique aqui para saber mais sobre a nossa jornada.', position: 'right' },
       { id: 'step2', targetId: 'btn-contato', title: 'Fale Conosco', description: 'Canal direto com nossa equipe de suporte.', position: 'bottom' },
       {
         id: 'step3',
-        targetId: 'drop-idioma',
+        targetId: 'gatilho-idioma',
         title: 'Selecione seu Idioma',
         description: 'Aqui você pode gerenciar a localização.',
         position: 'left',
@@ -69,8 +69,8 @@ export class Header implements OnInit {
         title: 'Escolha uma Opção',
         description: 'Selecione a linguagem nativa para tradução completa.',
         position: 'left',
-        afterHide: () => this.toggleDropdown(false),
         beforeShow: () => this.toggleDropdown(true),
+        afterHide: () => this.toggleDropdown(false),
       }
     ]);
 

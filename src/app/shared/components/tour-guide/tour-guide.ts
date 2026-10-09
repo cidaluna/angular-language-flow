@@ -114,7 +114,8 @@ export class TourGuide {
       height: rect.height + (padding * 2)
     });
 
-    const gap = isMobile ? 10 : 20;
+    const baseGap = isMobile ? 14 : 18;
+    const lateralGap = isMobile ? 6 : 10;
     let top = 0;
     let left = 0;
 
@@ -123,20 +124,20 @@ export class TourGuide {
     // 1. Cálculos de Posição Inicial Baseados na Geometria Padrão
     switch (computedPosition) {
       case 'bottom':
-        top = rect.bottom + scrollY + gap;
+        top = rect.bottom + scrollY + baseGap;
         left = isMobile ? windowWidth / 2 : rect.left + scrollX + rect.width / 2;
         break;
       case 'top':
-        top = rect.top + scrollY - gap;
+        top = rect.top + scrollY - baseGap;
         left = isMobile ? windowWidth / 2 : rect.left + scrollX + rect.width / 2;
         break;
       case 'left':
         top = rect.top + scrollY + rect.height / 2;
-        left = rect.left + scrollX - gap;
+        left = rect.left + scrollX - padding - lateralGap + 6;
         break;
       case 'right':
         top = rect.top + scrollY + rect.height / 2;
-        left = rect.right + scrollX + gap;
+        left = rect.right + scrollX + padding + lateralGap;
         break;
     }
 
@@ -154,18 +155,16 @@ export class TourGuide {
         const estimatedTopPivot = top - scrollY - (bubbleHeightEstimated / 2);
 
         if (estimatedTopPivot < paddingScreen) {
-          // Ajusta a coordenada top para alinhar perfeitamente com a quina superior do elemento alvo
           top = rect.top + scrollY;
-          this.isTopCollided.set(true); // Ativa classe que zera a translação de y no SCSS (-50% para 0)
+          this.isTopCollided.set(true);
         }
 
-        // Validação das laterais (Eixo X) para left/right
         if (left - bubbleWidth < paddingScreen) {
           left = rect.left + scrollX + rect.width / 2;
-          top = rect.bottom + scrollY + gap;
+          top = rect.bottom + scrollY + baseGap;
           this.isTopCollided.set(false);
         } else if (left + bubbleWidth > windowWidth - paddingScreen) {
-          left = rect.left + scrollX - bubbleWidth - gap;
+          left = rect.left + scrollX - bubbleWidth - baseGap;
         }
       } else if (step.position === 'bottom' || step.position === 'top') {
         if (left - (bubbleWidth / 2) < paddingScreen) {
