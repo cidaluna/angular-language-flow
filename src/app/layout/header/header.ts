@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { TranslocoModule } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngxs/store';
@@ -27,19 +27,32 @@ export class Header implements OnInit {
   ];
 
 
-  /**
-   * O Header não salva preferência diretamente.
-   * Ele apenas comunica a intenção do usuário ao NGXS.
-   * O State decide:
-   * POST preferência ->  GET Home -> Transloco -> commit
-   */
-  protected onLanguageChange(event: Event): void {
-    console.log(":: [Header] método onLanguageChange com o event: ", event);
-    const selectElement = event.target as HTMLSelectElement;
-    if (!selectElement) {
-      return;
-    }
-    const selectedLanguage = selectElement.value;
+  // Computa reativamente o label amigável correspondente ao código do idioma selecionado no State.
+  protected currentLangLabel = computed(() => {
+    const code = this.currentLang();
+    return this.languages.find(lang => lang.code === code)?.label || code;
+  });
+
+  // /**
+  //  * O Header não salva preferência diretamente.
+  //  * Ele apenas comunica a intenção do usuário ao NGXS.
+  //  * O State decide:
+  //  * POST preferência ->  GET Home -> Transloco -> commit
+  //  */
+  // protected onLanguageChange(event: Event): void {
+  //   console.log(":: [Header] método onLanguageChange com o event: ", event);
+  //   const selectElement = event.target as HTMLSelectElement;
+  //   if (!selectElement) {
+  //     return;
+  //   }
+  //   const selectedLanguage = selectElement.value;
+  //   this.store.dispatch(new ChangeLanguage(selectedLanguage));
+  // }
+
+  // Dispara a intenção de alteração de idioma diretamente para o State do NGXS usando a string do código.
+  protected onLanguageChange(selectedLanguage: string): void {
+    console.log(":: [Header] método onLanguageChange com o código: ", selectedLanguage);
+    if (!selectedLanguage) return;
     this.store.dispatch(new ChangeLanguage(selectedLanguage));
   }
 
@@ -71,7 +84,7 @@ export class Header implements OnInit {
         targetId: 'drop-aberto',
         title: 'Escolha uma Opção',
         description: 'Selecione a linguagem nativa para tradução completa.',
-        position: 'bottom',
+        position: 'left',
         beforeShow: () => this.toggleDropdown(true),
         afterHide: () => this.toggleDropdown(false)
       }

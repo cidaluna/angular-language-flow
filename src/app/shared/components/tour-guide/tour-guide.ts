@@ -19,14 +19,16 @@ export class TourGuide {
   readonly spotlight = signal<SpotlightMetrics>({ top: 0, left: 0, width: 0, height: 0 });
 
   constructor() {
-    // Efeito reativo que atualiza posição do balão e do spotlight ao trocar de passo.
+    // Escuta mudanças de step e aguarda o ciclo completo de pintura do DOM do Angular 19 antes de medir.
     effect(() => {
       const step = this.tourService.currentStep();
       if (step) {
-        setTimeout(() => {
-          this.recalculateLayout();
-          this.focusContainer();
-        }, 60);
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            this.recalculateLayout();
+            this.focusContainer();
+          }, 40);
+        });
       }
     });
   }
@@ -82,13 +84,16 @@ export class TourGuide {
     }
   }
 
-  // Mede e posiciona as coordenadas do balão e do destaque sob o elemento alvo correspondente.
+  // Mede as coordenadas físicas reais no documento e corrige distorções de renderização de elementos assíncronos.
   private recalculateLayout(): void {
     const step = this.tourService.currentStep();
     if (!step) return;
 
     const target = document.getElementById(step.targetId);
-    if (!target) return;
+    if (!target || target.getBoundingClientRect().height === 0) {
+      requestAnimationFrame(() => this.recalculateLayout());
+      return;
+    }
 
     const rect = target.getBoundingClientRect();
     const scrollX = window.scrollX;
@@ -124,6 +129,38 @@ export class TourGuide {
         top = rect.top + scrollY - gap;
         left = rect.left + scrollX + rect.width / 2;
         break;
+    }
+
+     // 2. Sistema Inteligente de Validação Anti-Colisão (Margens da Janela/Viewport)
+    const bubbleWidth = 325;
+    const bubbleHeight = 180; // Altura aproximada estimada do card do tour
+    const windowWidth = window.innerWidth;
+    const paddingScreen = 16; // Margem mínima de segurança para o balão nunca encostar na quina do browser
+
+    // Correção para o eixo X (Laterais Esquerda / Direita)
+    if (step.position === 'left' || step.position === 'right') {
+      if (left - bubbleWidth < paddingScreen) {
+        // Se estourar a esquerda, força o balão a se posicionar para a direita ou centralizado abaixo
+        left = rect.left + scrollX + rect.width / 2;
+        top = rect.bottom + scrollY + gap;
+        step.position = 'bottom'; // Altera temporariamente a semântica de renderização visual do SCSS
+      } else if (left + bubbleWidth > windowWidth - paddingScreen) {
+        // Se estourar a borda direita (comum no último elemento do menu), empurra ele para a esquerda com segurança
+        left = rect.left + scrollX - bubbleWidth - gap;
+      }
+    } else if (step.position === 'bottom' || step.position === 'top') {
+      // Ajuste de centralização para posições de topo/base que estão muito perto das quinas laterais da tela
+      if (left - (bubbleWidth / 2) < paddingScreen) {
+        left = paddingScreen + (bubbleWidth / 2);
+      } else if (left + (bubbleWidth / 2) > windowWidth - paddingScreen) {
+        left = windowWidth - paddingScreen - (bubbleWidth / 2);
+      }
+    }
+
+    // Correção para o eixo Y (Topo / Abaixo da barra de ferramentas do navegador)
+    if (top - scrollY < paddingScreen) {
+      // Se o topo der negativo ou ficar escondido sob o topo do browser, empurra para a base (bottom)
+      top = rect.bottom + scrollY + gap;
     }
 
     this.bubbleTop.set(top);

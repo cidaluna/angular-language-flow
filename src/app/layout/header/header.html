@@ -1,27 +1,46 @@
 @if (isLoading()) {
-<div class="loading">Carregando dados da tela...</div>
+  <div class="loading">Carregando dados da tela...</div>
 } @else {
-<header class="app-header app-layout">
-  <span class="app-header__brand" id="header-brand">{{ 'header.brand' | transloco }}</span>
-  <span class="app-header__about" id="btn-sobre">{{ 'header.about' | transloco }}</span>
-  <span class="app-header__contact" id="btn-contato">{{ 'header.contact' | transloco }}</span>
+  <header class="app-header app-layout">
+    <span class="app-header__brand" id="header-brand">{{ 'header.brand' | transloco }}</span>
+    <span class="app-header__about" id="btn-sobre">{{ 'header.about' | transloco }}</span>
+    <span class="app-header__contact" id="btn-contato">{{ 'header.contact' | transloco }}</span>
 
-  <div class="app-header__controls dropdown" id="drop-idioma">
-    <label class="app-header__field">
-      {{ 'header.languageLabel' | transloco }}
-      <select class="app-header__select" [value]="currentLang()" (change)="onLanguageChange($event)"
-        (click)="toggleDropdown()">
+    <!-- Passo 3: O container ou o botão do gatilho do dropdown recebe o id -->
+    <div class="app-header__controls dropdown" id="drop-idioma">
+      <div class="app-header__field">
+        <span class="app-header__label">{{ 'header.languageLabel' | transloco }}</span>
+
+        <!-- Botão customizado que imita o Select mas é um elemento real tratável no DOM -->
+        <button
+          type="button"
+          class="app-header__select-trigger"
+          (click)="toggleDropdown()"
+          aria-haspopup="listbox"
+          [attr.aria-expanded]="isDropdownOpen()"
+        >
+          {{ currentLangLabel() }}
+        </button>
+
+        <!-- Passo 4: Agora a lista suspensa é um elemento HTML real do DOM que pode ser medido em Pixels -->
         @if (isDropdownOpen()) {
-        @for (lang of languages; track lang) {
-        <option [value]="lang.code" id="drop-aberto">
-          {{ lang.label }}
-        </option>
+          <ul class="app-header__dropdown-menu" id="drop-aberto" role="listbox">
+            @for (lang of languages; track lang.code) {
+              <li
+                role="option"
+                [attr.aria-selected]="currentLangLabel() === lang.code"
+                (click)="onLanguageChange(lang.code); toggleDropdown()"
+                (keydown.enter)="onLanguageChange(lang.code); toggleDropdown()"
+                tabindex="0"
+              >
+                {{ lang.label }}
+              </li>
+            }
+          </ul>
         }
-        }
-      </select>
-    </label>
+      </div>
+    </div>
+  </header>
 
-  </div>
-</header>
-<app-tour-guide />
+  <app-tour-guide />
 }

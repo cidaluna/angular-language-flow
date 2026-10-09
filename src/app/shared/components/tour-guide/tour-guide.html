@@ -3,6 +3,7 @@
 
   <div
     class="tour-spotlight"
+      [class.is-last-step]="tourService.currentStepIndex() === tourService.steps().length - 1"
     [style.top.px]="spotlight().top"
     [style.left.px]="spotlight().left"
     [style.width.px]="spotlight().width"
