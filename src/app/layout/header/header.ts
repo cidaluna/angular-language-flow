@@ -33,22 +33,6 @@ export class Header implements OnInit {
     return this.languages.find(lang => lang.code === code)?.label || code;
   });
 
-  // /**
-  //  * O Header não salva preferência diretamente.
-  //  * Ele apenas comunica a intenção do usuário ao NGXS.
-  //  * O State decide:
-  //  * POST preferência ->  GET Home -> Transloco -> commit
-  //  */
-  // protected onLanguageChange(event: Event): void {
-  //   console.log(":: [Header] método onLanguageChange com o event: ", event);
-  //   const selectElement = event.target as HTMLSelectElement;
-  //   if (!selectElement) {
-  //     return;
-  //   }
-  //   const selectedLanguage = selectElement.value;
-  //   this.store.dispatch(new ChangeLanguage(selectedLanguage));
-  // }
-
   // Dispara a intenção de alteração de idioma diretamente para o State do NGXS usando a string do código.
   protected onLanguageChange(selectedLanguage: string): void {
     console.log(":: [Header] método onLanguageChange com o código: ", selectedLanguage);
@@ -85,8 +69,8 @@ export class Header implements OnInit {
         title: 'Escolha uma Opção',
         description: 'Selecione a linguagem nativa para tradução completa.',
         position: 'left',
+        afterHide: () => this.toggleDropdown(false),
         beforeShow: () => this.toggleDropdown(true),
-        afterHide: () => this.toggleDropdown(false)
       }
     ]);
 

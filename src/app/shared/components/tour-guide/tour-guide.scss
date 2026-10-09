@@ -29,7 +29,7 @@ $z-bubble: 100000;
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.25);
   pointer-events: none;
   background-color: transparent;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 
    // Alterado: Modificador que intercepta o último passo e altera a cor dinamicamente
   &.is-last-step {
@@ -43,16 +43,33 @@ $z-bubble: 100000;
   position: absolute;
   z-index: $z-bubble;
   width: 325px;
-  max-width: 90vw;
   max-width: calc(100vw - 32px); // Garante que o balão encolha em viewports muito estreitas (ex: mobile)
   outline: none;
   filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.3));
-  transition: top 0.2s ease, left 0.2s ease;
+  transition: top 0.25s ease, left 0.2s ease;
 
   &.position-bottom { transform: translateX(-50%); }
   &.position-left { transform: translate(-100%, -50%); }
   &.position-right { transform: translate(0, -50%); }
   &.position-top { transform: translate(-50%, -100%); }
+
+  // NOVA REGRA: Sobrescreve o pivô se houver risco de sumir acima da barra do navegador (Eixo Y corrigido)
+  &.is-top-collided {
+    &.position-left { transform: translate(-100%, 0) !important; }
+    &.position-right { transform: translate(0, 0) !important; }
+  }
+
+  // Regras de responsividade para telas mobile/pequenas
+  &.is-mobile {
+    width: calc(100vw - 32px) !important;
+    max-width: 450px !important;
+    transform: translateX(-50%) !important;
+    left: 50% !important;
+
+    .tour-card {
+      padding: 14px;
+    }
+  }
 }
 
 .tour-card {

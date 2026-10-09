@@ -46,7 +46,7 @@ export class TourGuideService {
       this.executeBeforeShow();
       this.saveTelemetry('next');
     } else {
-      this.complete();
+      await this.complete();
     }
   }
 
@@ -62,26 +62,31 @@ export class TourGuideService {
     this.saveTelemetry('previous');
   }
 
-  // Interrompe o fluxo registrando a ação de desistência voluntária do usuário.
-  skip(): void {
+  // Interrompe o fluxo registrando a ação de desistência voluntária e limpando hooks pendentes.
+  async skip(): Promise<void> {
     this.saveTelemetry('skip');
+    const current = this.currentStep();
+    if (current?.afterHide) await current.afterHide();
     this.reset();
   }
 
-  // Fecha o balão abruptamente ao clicar no botão X ou interagir via atalho ESC.
-  close(): void {
+  // Fecha o balão abruptamente ao clicar no botão X ou ESC, executando a limpeza do step atual.
+  async close(): Promise<void> {
     this.saveTelemetry('close');
+    const current = this.currentStep();
+    if (current?.afterHide) await current.afterHide();
     this.reset();
   }
 
-  // Conclui com êxito o fluxo completo salvando os logs e persistindo o encerramento permanente.
-  complete(): void {
+  // Conclui com êxito o fluxo completo executando o afterHide do último passo e salvando os logs definitivos.
+  async complete(): Promise<void> {
     this.saveTelemetry('complete');
-    // TODO: Enviar o barramento completo de telemetry para API de gravação permanente
+    const current = this.currentStep();
+    if (current?.afterHide) await current.afterHide();
     this.reset();
   }
 
-  // Reseta o indexador forçando a ocultação de todos os elementos visuais do tour.
+ // Reseta o indexador forçando a ocultação de todos os elementos visuais do tour.
   private reset(): void {
     this.currentStepIndex.set(-1);
   }

@@ -17,9 +17,11 @@ export class TourGuide {
   readonly bubbleTop = signal<number>(0);
   readonly bubbleLeft = signal<number>(0);
   readonly spotlight = signal<SpotlightMetrics>({ top: 0, left: 0, width: 0, height: 0 });
+  readonly isMobileLayout = signal<boolean>(false);
+  readonly isTopCollided = signal<boolean>(false); // Novo sinal para controlar classes de safe-zone no CSS
 
   constructor() {
-    // Escuta mudanças de step e aguarda o ciclo completo de pintura do DOM do Angular 19 antes de medir.
+    // Escuta mudanças de step e aguarda o ciclo de pintura do DOM do Angular 19 para medir.
     effect(() => {
       const step = this.tourService.currentStep();
       if (step) {
@@ -98,6 +100,10 @@ export class TourGuide {
     const rect = target.getBoundingClientRect();
     const scrollX = window.scrollX;
     const scrollY = window.scrollY;
+    const windowWidth = window.innerWidth;
+
+    const isMobile = windowWidth <= 768;
+    this.isMobileLayout.set(isMobile);
 
     const padding = 8;
 
@@ -108,14 +114,21 @@ export class TourGuide {
       height: rect.height + (padding * 2)
     });
 
-    const gap = 20;
+    const gap = isMobile ? 10 : 20;
     let top = 0;
     let left = 0;
 
-    switch (step.position) {
+    const computedPosition = isMobile ? 'bottom' : step.position;
+
+    // 1. Cálculos de Posição Inicial Baseados na Geometria Padrão
+    switch (computedPosition) {
       case 'bottom':
         top = rect.bottom + scrollY + gap;
-        left = rect.left + scrollX + rect.width / 2;
+        left = isMobile ? windowWidth / 2 : rect.left + scrollX + rect.width / 2;
+        break;
+      case 'top':
+        top = rect.top + scrollY - gap;
+        left = isMobile ? windowWidth / 2 : rect.left + scrollX + rect.width / 2;
         break;
       case 'left':
         top = rect.top + scrollY + rect.height / 2;
@@ -125,42 +138,42 @@ export class TourGuide {
         top = rect.top + scrollY + rect.height / 2;
         left = rect.right + scrollX + gap;
         break;
-      case 'top':
-        top = rect.top + scrollY - gap;
-        left = rect.left + scrollX + rect.width / 2;
-        break;
     }
 
-     // 2. Sistema Inteligente de Validação Anti-Colisão (Margens da Janela/Viewport)
-    const bubbleWidth = 325;
-    const bubbleHeight = 180; // Altura aproximada estimada do card do tour
-    const windowWidth = window.innerWidth;
-    const paddingScreen = 16; // Margem mínima de segurança para o balão nunca encostar na quina do browser
+    // Reset padrão do estado de colisão do topo antes de reavaliar as restrições
+    this.isTopCollided.set(false);
 
-    // Correção para o eixo X (Laterais Esquerda / Direita)
-    if (step.position === 'left' || step.position === 'right') {
-      if (left - bubbleWidth < paddingScreen) {
-        // Se estourar a esquerda, força o balão a se posicionar para a direita ou centralizado abaixo
-        left = rect.left + scrollX + rect.width / 2;
-        top = rect.bottom + scrollY + gap;
-        step.position = 'bottom'; // Altera temporariamente a semântica de renderização visual do SCSS
-      } else if (left + bubbleWidth > windowWidth - paddingScreen) {
-        // Se estourar a borda direita (comum no último elemento do menu), empurra ele para a esquerda com segurança
-        left = rect.left + scrollX - bubbleWidth - gap;
-      }
-    } else if (step.position === 'bottom' || step.position === 'top') {
-      // Ajuste de centralização para posições de topo/base que estão muito perto das quinas laterais da tela
-      if (left - (bubbleWidth / 2) < paddingScreen) {
-        left = paddingScreen + (bubbleWidth / 2);
-      } else if (left + (bubbleWidth / 2) > windowWidth - paddingScreen) {
-        left = windowWidth - paddingScreen - (bubbleWidth / 2);
-      }
-    }
+    // 2. Proteções e Ajustes de Viewport Avançados (Apenas Desktop/Telas Médias)
+    if (!isMobile) {
+      const bubbleWidth = 325;
+      const bubbleHeightEstimated = 180; // Altura aproximada do card com header, content e footer
+      const paddingScreen = 16;
 
-    // Correção para o eixo Y (Topo / Abaixo da barra de ferramentas do navegador)
-    if (top - scrollY < paddingScreen) {
-      // Se o topo der negativo ou ficar escondido sob o topo do browser, empurra para a base (bottom)
-      top = rect.bottom + scrollY + gap;
+      // Validação Crítica: Proteção contra colisão com o topo do navegador (Previne sumir metade para cima)
+      if (step.position === 'left' || step.position === 'right') {
+        const estimatedTopPivot = top - scrollY - (bubbleHeightEstimated / 2);
+
+        if (estimatedTopPivot < paddingScreen) {
+          // Ajusta a coordenada top para alinhar perfeitamente com a quina superior do elemento alvo
+          top = rect.top + scrollY;
+          this.isTopCollided.set(true); // Ativa classe que zera a translação de y no SCSS (-50% para 0)
+        }
+
+        // Validação das laterais (Eixo X) para left/right
+        if (left - bubbleWidth < paddingScreen) {
+          left = rect.left + scrollX + rect.width / 2;
+          top = rect.bottom + scrollY + gap;
+          this.isTopCollided.set(false);
+        } else if (left + bubbleWidth > windowWidth - paddingScreen) {
+          left = rect.left + scrollX - bubbleWidth - gap;
+        }
+      } else if (step.position === 'bottom' || step.position === 'top') {
+        if (left - (bubbleWidth / 2) < paddingScreen) {
+          left = paddingScreen + (bubbleWidth / 2);
+        } else if (left + (bubbleWidth / 2) > windowWidth - paddingScreen) {
+          left = windowWidth - paddingScreen - (bubbleWidth / 2);
+        }
+      }
     }
 
     this.bubbleTop.set(top);
