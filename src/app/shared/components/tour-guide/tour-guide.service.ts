@@ -3,6 +3,13 @@ import { TourStep, TourTelemetry, TourAction } from './tour-guide.types';
 
 @Injectable({ providedIn: 'root' })
 export class TourGuideService {
+  readonly bubbleTop = signal<number>(0);
+  readonly bubbleLeft = signal<number>(0);
+  readonly spotlight = signal<SpotlightMetrics>({ top: 0, left: 0, width: 0, height: 0 });
+  readonly isMobileLayout = signal<boolean>(false);
+  readonly isTopCollided = signal<boolean>(false);
+  readonly isPositionReady = signal<boolean>(false);
+
   private mockUserId = 'JCS1234';
   private tourPromiseResolver?: (value: 'COMPLETED' | 'SKIPPED' | 'CLOSED' | PromiseLike<'COMPLETED' | 'SKIPPED' | 'CLOSED'>) => void;
 
@@ -17,6 +24,32 @@ export class TourGuideService {
     const idx = this.currentStepIndex();
     return idx >= 0 && idx < this.steps().length ? this.steps()[idx] : null;
   });
+
+  constructor() {
+    // Escuta mudanças de step diretamente no pipeline do serviço e calcula o layout
+    effect((onCleanup) => {
+      const step = this.currentStep();
+      if (!step) {
+        this.isPositionReady.set(false);
+        return;
+      }
+
+      this.isPositionReady.set(false);
+      let frameId: number;
+
+      const timerId = setTimeout(() => {
+        frameId = requestAnimationFrame(() => {
+          this.recalculateLayout();
+          this.isPositionReady.set(true);
+        });
+      }, 0);
+
+      onCleanup(() => {
+        clearTimeout(timerId);
+        if (frameId) cancelAnimationFrame(frameId);
+      });
+    });
+  }
 
   // Configura os passos iniciais do tour e atualiza o método initialize para receber o ID do bloco:
   initialize(tourId: string, steps: TourStep[]): void {

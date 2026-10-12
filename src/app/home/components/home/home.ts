@@ -9,21 +9,22 @@ import { FeatureFlagService } from './services/feature-flag.service';
 import { TourGuideService } from '../../../shared/components/tour-guide/tour-guide.service';
 import { TourStep } from '../../../shared/components/tour-guide/tour-guide.types';
 import { TourOrchestratorService } from '../../../shared/components/tour-guide/tour-guide-orchestrator.service';
+import { TourGuide } from './../../../shared/components/tour-guide/tour-guide';
 
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, TranslocoModule],
+  imports: [CommonModule, TranslocoModule, TourGuide],
   templateUrl: './home.html',
   styleUrl: './home.scss',
 })
 export class Home {
   private store = inject(Store);
   private readonly ffService = inject(FeatureFlagService);
-  private tourService = inject(TourGuideService);
   private tourOrchestratorService = inject(TourOrchestratorService);
 
+  protected tourService = inject(TourGuideService);
   protected currentUser = signal('JCS1234');
   protected items = toSignal(this.store.select(HomeLanguageState.items), { initialValue: [] });
   protected loading = toSignal(this.store.select(HomeLanguageState.loading), {
@@ -109,24 +110,21 @@ export class Home {
       const completeData = this.successData();
       const uncompleteData = this.loading();
       const completeFlagCards = this.canShowCards();
-      const userActive = this.currentUser();
 
-      // GARANTIA EXTRA: Só avalia o LocalStorage se os dados da API REALMENTE já pousaram na tela!
+      // Avalia o LocalStorage se os dados da API REALMENTE já pousaram na tela!
       if (completeData && !uncompleteData && completeFlagCards) {
 
-        // Checa se o usuário já concluiu o segundo tour (o fim da esteira)
-        const seenAllTours = this.tourOrchestratorService.isTourCompleted('tour-home-second', userActive);
+        // O untracked impede loops infinitos caso o serviço altere algum signal interno
+        untracked(() => {
+          // O setTimeout 0 joga a execução para o final da fila de pintura (Paint) do navegador,
+          // garantindo que os elementos HTML físicos existam antes do tour caçar os IDs.
+          setTimeout(() => {
+            console.log('[Home Effect] Condições de sucesso atingidas. Delegando agendamento ao Orquestrador.');
 
-        // Se ele NÃO viu o tour completo, aí sim liberamos o agendamento!
-        if (!seenAllTours) {
-          untracked(() => {
-            setTimeout(() => {
-              this.configTour();
-            }, 0);
-          });
-        } else {
-          console.log(`[Home Effect] Tour bloqueado com sucesso! O usuário ${userActive} já passou pelo onboarding.`);
-        }
+            // Dispara as configurações dos tours. Chaves e validações agora morrem lá dentro!
+            this.configTour();
+          }, 0);
+        });
       }
     });
     }

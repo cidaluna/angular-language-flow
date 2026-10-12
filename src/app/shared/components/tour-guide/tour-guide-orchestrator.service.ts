@@ -40,6 +40,14 @@ export class TourOrchestratorService {
     // Evita duplicidade do mesmo tour inserido na fila
     if (this.tourQueue.some(t => t.id === request.id)) return;
 
+    const mockUserId = 'JCS1234'; // Alinhado com o ID real gravado no navegador
+    const tourViewed = this.isTourCompleted(request.id, mockUserId);
+
+    if (tourViewed) {
+      console.log(`[Tour Orchestrator] Bloco ${request.id} já foi concluído pelo usuário ${mockUserId}. Ignorando agendamento.`);
+      return; // <--- Bloqueia o tour antes mesmo de ele entrar na fila!
+    }
+
     this.tourQueue.push(request);
 
     // Reordena a fila pela prioridade: menor número (1) vem primeiro

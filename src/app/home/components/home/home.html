@@ -67,3 +67,19 @@
   <!-- Nem 'error' nem 'success' → status é 'idle', nada renderiza,
        overlay global do loaderInterceptor cobre a tela -->
 </main>
+<app-tour-guide
+  [steps]="tourService.steps()"
+  [currentStepIndex]="tourService.currentStepIndex()"
+  [spotlight]="tourService.spotlight()"
+  [bubbleTop]="tourService.bubbleTop()"
+  [bubbleLeft]="tourService.bubbleLeft()"
+  [isMobileLayout]="tourService.isMobileLayout()"
+  [isTopCollided]="tourService.isTopCollided()"
+  [isPositionReady]="tourService.isPositionReady()"
+  [isActive]="tourService.isActive()"
+  (nextClick)="tourService.next()"
+  (previousClick)="tourService.previous()"
+  (skipClick)="tourService.skip()"
+  (closeClick)="tourService.close()"
+  (completeClick)="tourService.complete()"
+></app-tour-guide>

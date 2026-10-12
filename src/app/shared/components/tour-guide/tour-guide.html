@@ -1,9 +1,10 @@
-@if (tourService.isActive() && tourService.currentStep(); as step) {
-  <div class="tour-overlay" (click)="tourService.close()"></div>
+@if (isActive() && currentStep(); as step) {
+  <div class="tour-overlay" (click)="closeClick.emit()"></div>
 
   <div
     class="tour-spotlight"
-      [class.is-last-step]="tourService.currentStepIndex() === tourService.steps().length - 1"
+    [class.is-last-step]="isLastStep()"
+    [class.is-ready]="isPositionReady()"
     [style.top.px]="spotlight().top"
     [style.left.px]="spotlight().left"
     [style.width.px]="spotlight().width"
@@ -28,15 +29,15 @@
       <header class="tour-header">
         <div class="tour-progress">
           <div class="dots-container">
-            @for (s of tourService.steps(); track s.id; let idx = $index) {
-              <span class="dot" [class.active]="idx <= tourService.currentStepIndex()"></span>
+            @for (s of steps(); track s.id; let idx = $index) {
+              <span class="dot" [class.active]="idx <= currentStepIndex()"></span>
             }
           </div>
           <span class="counter">
-            {{ tourService.currentStepIndex() + 1 }} de {{ tourService.steps().length }}
+            {{ currentStepIndex() + 1 }} de {{ steps().length }}
           </span>
         </div>
-        <button class="btn-close" (click)="tourService.close()" aria-label="Fechar tour">&times;</button>
+        <button class="btn-close" (click)="closeClick.emit()" aria-label="Fechar tour">&times;</button>
       </header>
 
       <div class="tour-content">
@@ -45,16 +46,16 @@
       </div>
 
       <footer class="tour-footer">
-        @if (tourService.currentStepIndex() === 0) {
-          <button class="btn-action link" (click)="tourService.skip()">Pular tour</button>
+        @if (currentStepIndex() === 0) {
+          <button class="btn-action link" (click)="skipClick.emit()">Pular tour</button>
         } @else {
-          <button class="btn-action link" (click)="tourService.previous()">Voltar</button>
+          <button class="btn-action link" (click)="previousClick.emit()">Voltar</button>
         }
 
-        @if (tourService.currentStepIndex() === tourService.steps().length - 1) {
-          <button class="btn-action primary" (click)="tourService.complete()">Concluir</button>
+        @if (isLastStep()) {
+          <button class="btn-action primary" (click)="completeClick.emit()">Concluir</button>
         } @else {
-          <button class="btn-action primary" (click)="tourService.next()">Próximo</button>
+          <button class="btn-action primary" (click)="nextClick.emit()">Próximo</button>
         }
       </footer>
     </section>
