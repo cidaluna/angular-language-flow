@@ -4,6 +4,7 @@ import { TourStep, TourTelemetry, TourAction } from './tour-guide.types';
 @Injectable({ providedIn: 'root' })
 export class TourGuideService {
   private mockUserId = 'user_98765';
+  private tourPromiseResolver?: () => void;
 
   readonly steps = signal<TourStep[]>([]);
   readonly currentStepIndex = signal<number>(-1);
@@ -21,12 +22,22 @@ export class TourGuideService {
   }
 
   // Inicia o tour a partir do primeiro passo caso o carregamento geral esteja concluído.
-  start(): void {
-    console.log(':: Entrou no start do tour sevice');
-    if (this.steps().length === 0) return;
-    this.currentStepIndex.set(0);
-    this.executeBeforeShow();
-    this.saveTelemetry('start');
+  start(): Promise<void> {
+    console.log(':: Entrou no start do tour service');
+
+    return new Promise<void>((resolve) => {
+      if (this.steps().length === 0) {
+        resolve(); // Se não tiver passos, destrava a fila imediatamente
+        return;
+      }
+
+      // Salvamos a função de resolução na nossa propriedade de classe
+      this.tourPromiseResolver = resolve;
+
+      this.currentStepIndex.set(0);
+      this.executeBeforeShow();
+      this.saveTelemetry('start');
+    });
   }
 
   // Avança para o próximo passo executando hooks assíncronos de fechamento de elementos se houver.
@@ -64,6 +75,8 @@ export class TourGuideService {
     const current = this.currentStep();
     if (current?.afterHide) await current.afterHide();
     this.reset();
+    // GATILHO ESSENCIAL ADICIONADO: Impede o travamento da fila ao pular o tour
+    this.liberarOrquestrador();
   }
 
   // Fecha o balão abruptamente ao clicar no botão X ou ESC, executando a limpeza do step atual.
@@ -72,6 +85,8 @@ export class TourGuideService {
     const current = this.currentStep();
     if (current?.afterHide) await current.afterHide();
     this.reset();
+    // GATILHO: Avisa o orquestrador que este bloco fechou
+    this.liberarOrquestrador();
   }
 
   // Conclui com êxito o fluxo completo executando o afterHide do último passo e salvando os logs definitivos.
@@ -80,11 +95,22 @@ export class TourGuideService {
     const current = this.currentStep();
     if (current?.afterHide) await current.afterHide();
     this.reset();
+    // GATILHO: Avisa o orquestrador que este bloco fechou
+    this.liberarOrquestrador();
   }
 
  // Reseta o indexador forçando a ocultação de todos os elementos visuais do tour.
   private reset(): void {
     this.currentStepIndex.set(-1);
+    this.steps.set([]); // Higienização de estado para evitar vazamentos de memória (residual)
+  }
+
+  // NOVA FUNÇÃO AUXILIAR: Executa o resolve e limpa a memória
+  private liberarOrquestrador(): void {
+    if (this.tourPromiseResolver) {
+      this.tourPromiseResolver(); // <--- Destrava o 'await' do Orquestrador!
+      this.tourPromiseResolver = undefined; // Limpa a referência para o próximo bloco da fila
+    }
   }
 
   // Dispara a função preparatória programada antes de expor o passo atual na tela.

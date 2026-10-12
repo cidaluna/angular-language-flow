@@ -168,44 +168,21 @@ export class Home {
 
   // Controle do tour
   configTour() {
-    console.log('Iniciando o tour com o DOM pronto!');
-    // Configura os 4 passos solicitados pelo roteiro
-    const customSteps: TourStep[] = [
+    const customStepsPme: TourStep[] = [
+       {
+        id: 'pme-step1',
+        targetId: 'custom-brand',
+        title: 'Logo da aplicação',
+        description: 'Aqui você tem o logo da aplicação.',
+        position: 'bottom'
+      },
       {
-        id: 'step1',
+        id: 'pme-step2',
         targetId: 'btn-sobre',
         title: 'Conheça nossa Empresa',
         description: 'Clique aqui para saber mais sobre a nossa jornada.',
         position: 'right'
       },
-      {
-        id: 'step2',
-        targetId: 'btn-contato',
-        title: 'Fale Conosco',
-        description: 'Canal direto com nossa equipe de suporte.',
-        position: 'bottom'
-      },
-      {
-        id: 'step3',
-        targetId: 'gatilho-idioma',
-        title: 'Selecione seu Idioma',
-        description: 'Aqui você pode gerenciar a localização.',
-        position: 'left'
-      },
-      {
-        id: 'step4',
-        targetId: 'drop-aberto',
-        title: 'Escolha uma Opção',
-        description: 'Selecione a linguagem nativa para tradução completa.',
-        position: 'left'
-      },
-       {
-        id: 'step5',
-        targetId: 'custom-brand',
-        title: 'Logo da aplicação',
-        description: 'Aqui você tem o logo da aplicação.',
-        position: 'bottom'
-      }
     ];
     //this.tourService.initialize(customSteps); // Passo os dados
     //this.tourService.start(); // Inicia o tour
@@ -215,7 +192,37 @@ export class Home {
     this.tourOrchestratorService.requestTour({
       id: 'tour-home-first',      // Identificador único deste bloco de passos
       priority: 1,                // Define a ordem: 1 executa primeiro, 2 entra em espera, etc.
-      steps: customSteps          // O seu array de passos configurado acima
+      steps: customStepsPme          // O seu array de passos configurado acima
+    });
+
+    const customStepsI18n: TourStep[] = [
+      {
+        id: 'i18n-step1',
+        targetId: 'btn-contato',
+        title: 'Fale Conosco',
+        description: 'Canal direto com nossa equipe de suporte.',
+        position: 'bottom'
+      },
+      {
+        id: 'i18n-step2',
+        targetId: 'gatilho-idioma',
+        title: 'Veja aqui o idioma',
+        description: 'Aqui você pode visualizar o idioma ativo.',
+        position: 'left'
+      },
+      {
+        id: 'i18n-step3',
+        targetId: 'drop-aberto',
+        title: 'Escolha uma Opção',
+        description: 'Selecione a linguagem nativa para tradução completa.',
+        position: 'left'
+      },
+    ];
+
+    this.tourOrchestratorService.requestTour({
+      id: 'tour-home-second',      // Identificador único deste bloco de passos
+      priority: 2,                // Define a ordem: 1 executa primeiro, 2 entra em espera, etc.
+      steps: customStepsI18n          // O seu array de passos configurado acima
     });
   }
 }

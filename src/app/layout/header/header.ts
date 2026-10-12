@@ -50,7 +50,7 @@ export class Header {
       const activeStep = this.tourService.currentStepIndex(); // certifique-se de expor o index como Signal no serviço
 
       // Armazena o estado que o dropdown DEVERIA ter neste passo
-      const shouldOpen = (activeStep === 3);
+      const shouldOpen = (activeStep === 2);
 
       // Trava de segurança contra o piscar:
       // SÓ altera o signal se o estado atual do dropdown for DIFERENTE do que ele precisa ser.
