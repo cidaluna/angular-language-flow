@@ -7,9 +7,8 @@ export class TourGuideService {
 
   readonly steps = signal<TourStep[]>([]);
   readonly currentStepIndex = signal<number>(-1);
-  readonly isLoaded = signal<boolean>(false);
   readonly historyLog = signal<TourTelemetry[]>([]);
-  readonly isActive = computed(() => this.currentStepIndex() !== -1 && this.isLoaded());
+  readonly isActive = computed(() => this.currentStepIndex() !== -1);
   readonly currentStep = computed(() => {
     const idx = this.currentStepIndex();
     return idx >= 0 && idx < this.steps().length ? this.steps()[idx] : null;
@@ -20,14 +19,9 @@ export class TourGuideService {
     this.steps.set(steps);
   }
 
-  // Notifica o serviço que a página terminou de carregar os elementos ou loadings pendentes.
-  setPageLoaded(loaded: boolean): void {
-    this.isLoaded.set(loaded);
-  }
-
   // Inicia o tour a partir do primeiro passo caso o carregamento geral esteja concluído.
   start(): void {
-    if (this.steps().length === 0 || !this.isLoaded()) return;
+    if (this.steps().length === 0) return;
     this.currentStepIndex.set(0);
     this.executeBeforeShow();
     this.saveTelemetry('start');

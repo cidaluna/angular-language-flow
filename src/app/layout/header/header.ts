@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, AfterViewInit, signal, ViewChild } from '@angular/core';
 import { TranslocoModule } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngxs/store';
@@ -15,7 +15,7 @@ import { TourGuideService } from '../../shared/components/tour-guide/tour-guide.
   styleUrl: './header.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class Header implements OnInit {
+export class Header implements AfterViewInit {
   private store = inject(Store);
   protected currentLang = toSignal(this.store.select(HomeLanguageState.currentLang), { initialValue: 'pt-BR' });
 
@@ -42,7 +42,6 @@ export class Header implements OnInit {
 
   private tourService = inject(TourGuideService);
 
-  readonly isLoading = signal<boolean>(true);
   readonly isDropdownOpen = signal<boolean>(false);
 
   // Altera programaticamente o estado aberto/fechado da lista de idiomas.
@@ -50,7 +49,22 @@ export class Header implements OnInit {
     this.isDropdownOpen.set(state !== undefined ? state : !this.isDropdownOpen());
   }
 
-  ngOnInit(): void {
+  // ngOnInit(): void {
+  //   // Simulação de carregamento de APIs da tela. Quando finaliza, o tour é liberado e iniciado.
+  //
+  // }
+
+  ngAfterViewInit(): void {
+    // O DOM do header acabou de ser renderizado.
+    // Usamos o setTimeout para empurrar a execução para o próximo ciclo de renderização (MacroTask),
+    // garantindo que o Angular já estilizou e posicionou os elementos na tela.
+    setTimeout(() => {
+      this.startTour();
+    }, 0);
+  }
+
+  startTour() {
+    console.log('Iniciando o tour com o DOM pronto!');
     // Configura os 4 passos solicitados pelo roteiro
     this.tourService.initialize([
       { id: 'step1', targetId: 'btn-sobre', title: 'Conheça nossa Empresa', description: 'Clique aqui para saber mais sobre a nossa jornada.', position: 'right' },
@@ -73,15 +87,8 @@ export class Header implements OnInit {
         afterHide: () => this.toggleDropdown(false),
       }
     ]);
-
-    // Simulação de carregamento de APIs da tela. Quando finaliza, o tour é liberado e iniciado.
     setTimeout(() => {
-      this.isLoading.set(false);
-      this.tourService.setPageLoaded(true);
       this.tourService.start();
     }, 1500);
   }
-
-
-
 }

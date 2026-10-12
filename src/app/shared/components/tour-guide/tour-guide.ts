@@ -1,4 +1,12 @@
-import { Component, inject, effect, signal, HostListener, viewChild, ElementRef } from '@angular/core';
+import {
+  Component,
+  inject,
+  effect,
+  signal,
+  HostListener,
+  viewChild,
+  ElementRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TourGuideService } from './tour-guide.service';
 import { SpotlightMetrics } from './tour-guide.types';
@@ -8,7 +16,7 @@ import { SpotlightMetrics } from './tour-guide.types';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './tour-guide.html',
-  styleUrls: ['./tour-guide.scss']
+  styleUrls: ['./tour-guide.scss'],
 })
 export class TourGuide {
   readonly tourService = inject(TourGuideService);
@@ -21,24 +29,33 @@ export class TourGuide {
   readonly isTopCollided = signal<boolean>(false); // Novo sinal para controlar classes de safe-zone no CSS
 
   constructor() {
-    // Escuta mudanças de step e aguarda o ciclo de pintura do DOM do Angular 19 para medir.
-    effect(() => {
+    // Escuta mudanças de step e aguarda a pintura completa do DOM do Angular 19 para medir com precisão.
+    effect((onCleanup) => {
       const step = this.tourService.currentStep();
-      if (step) {
-        requestAnimationFrame(() => {
-          setTimeout(() => {
-            this.recalculateLayout();
-            this.focusContainer();
-          }, 40);
+      if (!step) return;
+
+      let frameId: number;
+
+      const timerId = setTimeout(() => {
+        frameId = requestAnimationFrame(() => {
+          this.recalculateLayout();
+          this.focusContainer();
         });
-      }
+      }, 40);
+
+      onCleanup(() => {
+        clearTimeout(timerId);
+        if (frameId) cancelAnimationFrame(frameId);
+      });
     });
   }
 
   // Recalcula as dimensões em caso de alteração no tamanho da janela do navegador.
   @HostListener('window:resize')
   onResize(): void {
-    if (this.tourService.isActive()) this.recalculateLayout();
+    if (this.tourService.isActive()) {
+      this.recalculateLayout();
+    }
   }
 
   // Captura os comandos de atalhos e gerencia a navegação focada por teclado (Focus Trap).
@@ -92,12 +109,12 @@ export class TourGuide {
     if (!step) return;
 
     const target = document.getElementById(step.targetId);
-    if (!target || target.getBoundingClientRect().height === 0) {
-      requestAnimationFrame(() => this.recalculateLayout());
-      return;
-    }
+    if (!target) return;
 
     const rect = target.getBoundingClientRect();
+    // Proteção adicional: Se as dimensões forem zeroed, pula o cálculo para evitar divisões por zero ou posições que quebram o DOM.
+    if (rect.width === 0 && rect.height === 0) return;
+
     const scrollX = window.scrollX;
     const scrollY = window.scrollY;
     const windowWidth = window.innerWidth;
@@ -106,22 +123,22 @@ export class TourGuide {
     this.isMobileLayout.set(isMobile);
 
     const padding = 8;
-
     this.spotlight.set({
       top: rect.top + scrollY - padding,
       left: rect.left + scrollX - padding,
-      width: rect.width + (padding * 2),
-      height: rect.height + (padding * 2)
+      width: rect.width + padding * 2,
+      height: rect.height + padding * 2,
     });
 
-    const baseGap = isMobile ? 14 : 18;
-    const lateralGap = isMobile ? 6 : 10;
+    const baseGap = isMobile ? 10 : 16;
+    const lateralGap = 4;
     let top = 0;
     let left = 0;
 
+    // Converte posições horizontais para vertical se a largura do dispositivo for pequena (Mobile)
     const computedPosition = isMobile ? 'bottom' : step.position;
 
-    // 1. Cálculos de Posição Inicial Baseados na Geometria Padrão
+    // 1. Cálculos de Geometria de Posicionamento Padrão
     switch (computedPosition) {
       case 'bottom':
         top = rect.bottom + scrollY + baseGap;
@@ -133,7 +150,7 @@ export class TourGuide {
         break;
       case 'left':
         top = rect.top + scrollY + rect.height / 2;
-        left = rect.left + scrollX - padding - lateralGap + 6;
+        left = rect.left + scrollX - padding - lateralGap;
         break;
       case 'right':
         top = rect.top + scrollY + rect.height / 2;
@@ -141,36 +158,39 @@ export class TourGuide {
         break;
     }
 
-    // Reset padrão do estado de colisão do topo antes de reavaliar as restrições
+    // Reset padrão do sinal de colisão superior
     this.isTopCollided.set(false);
 
-    // 2. Proteções e Ajustes de Viewport Avançados (Apenas Desktop/Telas Médias)
+    // 2. Sistema Avançado de Zona de Segurança (Anti-Collision Guard)
     if (!isMobile) {
       const bubbleWidth = 325;
-      const bubbleHeightEstimated = 180; // Altura aproximada do card com header, content e footer
-      const paddingScreen = 16;
+      const bubbleHeightEstimated = 180; // Altura média do corpo do balão do tour
+      const safetyPadding = 12; // Distância mínima obrigatória do teto da janela do navegador
 
-      // Validação Crítica: Proteção contra colisão com o topo do navegador (Previne sumir metade para cima)
       if (step.position === 'left' || step.position === 'right') {
-        const estimatedTopPivot = top - scrollY - (bubbleHeightEstimated / 2);
+        // Estima se a translação vertical padrão de -50% do CSS vai jogar o balão para fora do topo do browser
+        const estimatedRealTop = rect.top - bubbleHeightEstimated / 2;
 
-        if (estimatedTopPivot < paddingScreen) {
-          top = rect.top + scrollY;
-          this.isTopCollided.set(true);
+        if (estimatedRealTop < safetyPadding) {
+          // Força o topo do balão a começar exatamente na linha segura abaixo do teto do navegador
+          top = scrollY + safetyPadding;
+          this.isTopCollided.set(true); // Alerta o SCSS para remover a translação vertical de -50%
         }
 
-        if (left - bubbleWidth < paddingScreen) {
+        // Proteção contra estouro das quinas laterais esquerdas e direitas da janela
+        if (left - bubbleWidth < safetyPadding) {
           left = rect.left + scrollX + rect.width / 2;
           top = rect.bottom + scrollY + baseGap;
           this.isTopCollided.set(false);
-        } else if (left + bubbleWidth > windowWidth - paddingScreen) {
+        } else if (left + bubbleWidth > windowWidth - safetyPadding) {
+          // Se estourar a quina direita, recua o balão com segurança baseado no tamanho fixo do card
           left = rect.left + scrollX - bubbleWidth - baseGap;
         }
       } else if (step.position === 'bottom' || step.position === 'top') {
-        if (left - (bubbleWidth / 2) < paddingScreen) {
-          left = paddingScreen + (bubbleWidth / 2);
-        } else if (left + (bubbleWidth / 2) > windowWidth - paddingScreen) {
-          left = windowWidth - paddingScreen - (bubbleWidth / 2);
+        if (left - bubbleWidth / 2 < safetyPadding) {
+          left = safetyPadding + bubbleWidth / 2;
+        } else if (left + bubbleWidth / 2 > windowWidth - safetyPadding) {
+          left = windowWidth - safetyPadding - bubbleWidth / 2;
         }
       }
     }

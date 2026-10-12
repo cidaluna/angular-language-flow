@@ -59,6 +59,11 @@ $z-bubble: 100000;
     &.position-right { transform: translate(0, 0) !important; }
   }
 
+  // CORREÇÃO: Quando estiver na extrema direita, o transform deve ser zerado para respeitar o pixel exato calculado pelo TS
+  &.is-right-edge {
+    transform: none !important;
+  }
+
   // Regras de responsividade para telas mobile/pequenas
   &.is-mobile {
     width: calc(100vw - 32px) !important;
