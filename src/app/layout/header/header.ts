@@ -7,6 +7,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { HomeLanguageState } from '../../home/components/home/state/home-language.state';
 import { TourGuide } from '../../shared/components/tour-guide/tour-guide';
 import { TourGuideService } from '../../shared/components/tour-guide/tour-guide.service';
+import { TourStep } from '../../shared/components/tour-guide/tour-guide.types';
 
 @Component({
   selector: 'app-header',
@@ -25,7 +26,6 @@ export class Header implements AfterViewInit {
     { code: 'en-US', label: 'English' },
     { code: 'es-ES', label: 'Español' }
   ];
-
 
   // Computa reativamente o label amigável correspondente ao código do idioma selecionado no State.
   protected currentLangLabel = computed(() => {
@@ -49,24 +49,19 @@ export class Header implements AfterViewInit {
     this.isDropdownOpen.set(state !== undefined ? state : !this.isDropdownOpen());
   }
 
-  // ngOnInit(): void {
-  //   // Simulação de carregamento de APIs da tela. Quando finaliza, o tour é liberado e iniciado.
-  //
-  // }
-
   ngAfterViewInit(): void {
     // O DOM do header acabou de ser renderizado.
     // Usamos o setTimeout para empurrar a execução para o próximo ciclo de renderização (MacroTask),
     // garantindo que o Angular já estilizou e posicionou os elementos na tela.
     setTimeout(() => {
-      this.startTour();
-    }, 0);
+      this.configTour();
+    }, 1000);
   }
 
-  startTour() {
+  configTour() {
     console.log('Iniciando o tour com o DOM pronto!');
     // Configura os 4 passos solicitados pelo roteiro
-    this.tourService.initialize([
+    const customSteps: TourStep[] = [
       { id: 'step1', targetId: 'btn-sobre', title: 'Conheça nossa Empresa', description: 'Clique aqui para saber mais sobre a nossa jornada.', position: 'right' },
       { id: 'step2', targetId: 'btn-contato', title: 'Fale Conosco', description: 'Canal direto com nossa equipe de suporte.', position: 'bottom' },
       {
@@ -86,9 +81,8 @@ export class Header implements AfterViewInit {
         beforeShow: () => this.toggleDropdown(true),
         afterHide: () => this.toggleDropdown(false),
       }
-    ]);
-    setTimeout(() => {
-      this.tourService.start();
-    }, 1500);
+    ];
+    this.tourService.initialize(customSteps); // Passo os dados
+    this.tourService.start(); // Inicia o tour
   }
 }
