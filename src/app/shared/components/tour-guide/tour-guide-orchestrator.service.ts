@@ -21,7 +21,11 @@ export class TourOrchestratorService {
    */
   public isTourCompleted(tourId: string, userId: string): boolean {
     const key = `tour_${tourId}_user_${userId}`;
-    return this.storageService.getItem(key) === 'true';
+    const valorNoStorage = this.storageService.getItem(key);
+
+    // Se o valor for 'true', retorna o booleano true.
+    // Se for 'false', null ou undefined, retorna o booleano false!
+    return valorNoStorage === 'true';
   }
 
   /**
@@ -38,13 +42,16 @@ export class TourOrchestratorService {
    */
   public requestTour(request: TourRequest): void {
     // Evita duplicidade do mesmo tour inserido na fila
-    if (this.tourQueue.some(t => t.id === request.id)) return;
+    if (this.tourQueue.some(t => t.id === request.id)) {
+      console.warn(`:: [DEBUG ORCHESTRATOR] ID ${request.id} rejeitado por duplicidade na fila.`);
+      return;
+    };
 
     const mockUserId = 'JCS1234'; // Alinhado com o ID real gravado no navegador
     const tourViewed = this.isTourCompleted(request.id, mockUserId);
 
     if (tourViewed) {
-      console.log(`[Tour Orchestrator] Bloco ${request.id} já foi concluído pelo usuário ${mockUserId}. Ignorando agendamento.`);
+      console.log(`:: [Orchestrator Check] Bloco ${request.id} REJEITADO. Já concluído.`);
       return; // <--- Bloqueia o tour antes mesmo de ele entrar na fila!
     }
 

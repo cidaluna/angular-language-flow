@@ -9,8 +9,14 @@ export class StorageService {
    * Lê uma chave do localStorage apenas se estiver rodando no navegador.
    */
   public getItem(key: string): string | null {
-    if (isPlatformBrowser(this.platformId)) {
-      return localStorage.getItem(key);
+    const noNavegador = isPlatformBrowser(this.platformId);
+
+    console.log(`:: [DEBUG STORAGE] Lendo chave: ${key} | Está rodando no navegador? ${noNavegador}`);
+
+    if (noNavegador) {
+      const valorReal = localStorage.getItem(key);
+      console.log(`:: [DEBUG STORAGE] Valor físico capturado no LocalStorage para a chave [${key}]:`, valorReal);
+      return valorReal;
     }
     return null;
   }

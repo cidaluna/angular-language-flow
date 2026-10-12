@@ -111,6 +111,13 @@ export class Home {
       const uncompleteData = this.loading();
       const completeFlagCards = this.canShowCards();
 
+      // LOG DE DIAGNÓSTICO: Mostra o estado real das três travas assim que a página carrega
+      console.log(':: [DEBUG HOME EFFECT] Estado atual das travas:', {
+        temItensNaStore: !!completeData,
+        estaBuscandoApi: uncompleteData,
+        featureFlagsProntas: completeFlagCards
+      });
+
       // Avalia o LocalStorage se os dados da API REALMENTE já pousaram na tela!
       if (completeData && !uncompleteData && completeFlagCards) {
 

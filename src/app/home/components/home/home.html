@@ -70,12 +70,6 @@
 <app-tour-guide
   [steps]="tourService.steps()"
   [currentStepIndex]="tourService.currentStepIndex()"
-  [spotlight]="tourService.spotlight()"
-  [bubbleTop]="tourService.bubbleTop()"
-  [bubbleLeft]="tourService.bubbleLeft()"
-  [isMobileLayout]="tourService.isMobileLayout()"
-  [isTopCollided]="tourService.isTopCollided()"
-  [isPositionReady]="tourService.isPositionReady()"
   [isActive]="tourService.isActive()"
   (nextClick)="tourService.next()"
   (previousClick)="tourService.previous()"
