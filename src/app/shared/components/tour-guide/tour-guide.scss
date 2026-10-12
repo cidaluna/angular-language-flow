@@ -46,7 +46,19 @@ $z-bubble: 100000;
   max-width: calc(100vw - 32px); // Garante que o balão encolha em viewports muito estreitas (ex: mobile)
   outline: none;
   filter: drop-shadow(0 12px 30px rgba(0, 0, 0, 0.3));
-  transition: top 0.25s ease, left 0.2s ease;
+  opacity: 0;           // Nasce totalmente invisível a cada troca de passo
+  visibility: hidden;   // Remove do fluxo de ponteiros para evitar cliques acidentais
+  transition:
+    opacity 0.15s ease-out,
+    visibility 0.15s ease-out,
+    top 0.25s ease,
+    left 0.2s ease;
+
+  // Quando o TS der o sinal verde, revela a caixinha direto na coordenada final
+  &.is-ready {
+    opacity: 1;
+    visibility: visible;
+  }
 
   &.position-bottom { transform: translateX(-50%); }
   &.position-left { transform: translate(-100%, -50%); }

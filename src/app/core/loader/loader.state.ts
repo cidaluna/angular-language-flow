@@ -10,10 +10,6 @@ export class HideLoader {
   static readonly type = '[Loader] Hide';
 }
 
-// 2. Interface
-// export interface LoaderStateModel {
-//   isLoading: boolean;
-// }
 export interface LoaderStateModel {
   activeRequests: number;
 }

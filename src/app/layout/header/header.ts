@@ -1,23 +1,24 @@
-import { ChangeDetectionStrategy, Component, computed, inject, AfterViewInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, signal, ViewChild } from '@angular/core';
 import { TranslocoModule } from '@jsverse/transloco';
 import { CommonModule } from '@angular/common';
 import { Store } from '@ngxs/store';
 import { ChangeLanguage } from '../../home/components/home/state/home-language.actions';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { HomeLanguageState } from '../../home/components/home/state/home-language.state';
-import { TourGuide } from '../../shared/components/tour-guide/tour-guide';
 import { TourGuideService } from '../../shared/components/tour-guide/tour-guide.service';
 import { TourStep } from '../../shared/components/tour-guide/tour-guide.types';
 
 @Component({
   selector: 'app-header',
-  imports: [CommonModule, TranslocoModule, TourGuide],
+  imports: [CommonModule, TranslocoModule],
   templateUrl: './header.html',
   styleUrl: './header.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class Header implements AfterViewInit {
+export class Header {
   private store = inject(Store);
+  private tourService = inject(TourGuideService);
+  readonly isDropdownOpen = signal<boolean>(false);
   protected currentLang = toSignal(this.store.select(HomeLanguageState.currentLang), { initialValue: 'pt-BR' });
 
   // Lista de idiomas disponíveis para o @for do seu HTML
@@ -40,49 +41,28 @@ export class Header implements AfterViewInit {
     this.store.dispatch(new ChangeLanguage(selectedLanguage));
   }
 
-  private tourService = inject(TourGuideService);
+  constructor() {
+    /**
+     * O Header monitora reativamente o passo atual do Tour.
+     * Quando o Tour chegar no passo do dropdown, o Header abre o DOM sozinho!
+     */
+    effect(() => {
+      const activeStep = this.tourService.currentStepIndex(); // certifique-se de expor o index como Signal no serviço
 
-  readonly isDropdownOpen = signal<boolean>(false);
+      // Armazena o estado que o dropdown DEVERIA ter neste passo
+      const shouldOpen = (activeStep === 3);
+
+      // Trava de segurança contra o piscar:
+      // SÓ altera o signal se o estado atual do dropdown for DIFERENTE do que ele precisa ser.
+      if (this.isDropdownOpen() !== shouldOpen) {
+        this.toggleDropdown(shouldOpen);
+      }
+    });
+  }
 
   // Altera programaticamente o estado aberto/fechado da lista de idiomas.
   toggleDropdown(state?: boolean): void {
-    this.isDropdownOpen.set(state !== undefined ? state : !this.isDropdownOpen());
-  }
-
-  ngAfterViewInit(): void {
-    // O DOM do header acabou de ser renderizado.
-    // Usamos o setTimeout para empurrar a execução para o próximo ciclo de renderização (MacroTask),
-    // garantindo que o Angular já estilizou e posicionou os elementos na tela.
-    setTimeout(() => {
-      this.configTour();
-    }, 1000);
-  }
-
-  configTour() {
-    console.log('Iniciando o tour com o DOM pronto!');
-    // Configura os 4 passos solicitados pelo roteiro
-    const customSteps: TourStep[] = [
-      { id: 'step1', targetId: 'btn-sobre', title: 'Conheça nossa Empresa', description: 'Clique aqui para saber mais sobre a nossa jornada.', position: 'right' },
-      { id: 'step2', targetId: 'btn-contato', title: 'Fale Conosco', description: 'Canal direto com nossa equipe de suporte.', position: 'bottom' },
-      {
-        id: 'step3',
-        targetId: 'gatilho-idioma',
-        title: 'Selecione seu Idioma',
-        description: 'Aqui você pode gerenciar a localização.',
-        position: 'left',
-        beforeShow: () => this.toggleDropdown(false) // Fecha o dropdown se o usuário voltar do step 4
-      },
-      {
-        id: 'step4',
-        targetId: 'drop-aberto',
-        title: 'Escolha uma Opção',
-        description: 'Selecione a linguagem nativa para tradução completa.',
-        position: 'left',
-        beforeShow: () => this.toggleDropdown(true),
-        afterHide: () => this.toggleDropdown(false),
-      }
-    ];
-    this.tourService.initialize(customSteps); // Passo os dados
-    this.tourService.start(); // Inicia o tour
+    const newState = state !== undefined ? state : !this.isDropdownOpen();
+    this.isDropdownOpen.set(newState);
   }
 }

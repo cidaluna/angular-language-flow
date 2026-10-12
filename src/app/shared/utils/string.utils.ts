@@ -8,7 +8,6 @@
  */
 export function normalizeString(value: string): string {
   const formatString = value.trim().toLowerCase();
-  console.log(":: UTILS entrou no normalizeString e formatou para = ", formatString);
   return formatString;
 }
 

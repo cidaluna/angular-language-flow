@@ -28,11 +28,20 @@ export class TourGuide {
   readonly isMobileLayout = signal<boolean>(false);
   readonly isTopCollided = signal<boolean>(false); // Novo sinal para controlar classes de safe-zone no CSS
 
+  // NOVO SIGNAL: Controla a exibição síncrona do balão
+  readonly isPositionReady = signal<boolean>(false);
+
   constructor() {
     // Escuta mudanças de step e aguarda a pintura completa do DOM do Angular 19 para medir com precisão.
     effect((onCleanup) => {
       const step = this.tourService.currentStep();
-      if (!step) return;
+      if (!step) {
+        this.isPositionReady.set(false);
+        return;
+      }
+
+      // 1. Esconde o balão imediatamente quando o passo muda
+      this.isPositionReady.set(false);
 
       let frameId: number;
 
@@ -40,8 +49,10 @@ export class TourGuide {
         frameId = requestAnimationFrame(() => {
           this.recalculateLayout();
           this.focusContainer();
+          // 3. Após recalcular o layout físico, tornamos o balão visível!
+          this.isPositionReady.set(true);
         });
-      }, 40);
+      }, 0);
 
       onCleanup(() => {
         clearTimeout(timerId);

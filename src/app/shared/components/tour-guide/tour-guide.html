@@ -16,6 +16,7 @@
     [class]="'position-' + step.position"
     [class.is-mobile]="isMobileLayout()"
     [class.is-top-collided]="isTopCollided()"
+    [class.is-ready]="isPositionReady()"
     [style.top.px]="bubbleTop()"
     [style.left.px]="bubbleLeft()"
     role="dialog"

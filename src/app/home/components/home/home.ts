@@ -6,6 +6,9 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { HomeLanguageState } from './state/home-language.state';
 import { ClearSwitchError, LoadInitialHomeItems } from './state/home-language.actions';
 import { FeatureFlagService } from './services/feature-flag.service';
+import { TourGuideService } from '../../../shared/components/tour-guide/tour-guide.service';
+import { TourStep } from '../../../shared/components/tour-guide/tour-guide.types';
+
 
 @Component({
   selector: 'app-home',
@@ -17,8 +20,9 @@ import { FeatureFlagService } from './services/feature-flag.service';
 export class Home {
   private store = inject(Store);
   private readonly ffService = inject(FeatureFlagService);
-  protected currentUser = signal('JCS1234');
+  private tourService = inject(TourGuideService);
 
+  protected currentUser = signal('JCS1234');
   protected items = toSignal(this.store.select(HomeLanguageState.items), { initialValue: [] });
   protected loading = toSignal(this.store.select(HomeLanguageState.loading), {
     initialValue: false,
@@ -91,8 +95,30 @@ export class Home {
      * O NGXS será a fonte oficial depois do sucesso.
      */
         console.log('[Home] iniciando carga inicial com idioma:', 'pt-BR');
-
         this.store.dispatch(new LoadInitialHomeItems('pt-BR'));
+
+        /**
+     * O SEGREDO DO TIMING CORRETO:
+     * Criamos um efeito reativo no Angular 19. Ele monitora o successData e o loading.
+     * Quando successData tiver dados E o loading do NGXS virar false (HideLoader),
+     * significa que o DOM acabou de ser montado com os dados reais!
+     */
+    effect(() => {
+      const completeData = this.successData();
+      const uncompleteData = this.loading();
+      const completeFlagCards = this.canShowCards();
+
+      // Condição perfeita: Tem dados na tela E o loader global sumiu!
+      if (completeData && !uncompleteData && completeFlagCards) {
+        // O untracked impede que o effect entre em loop caso o tourService altere algum signal interno
+        untracked(() => {
+          // Um micro-timeout de 0ms apenas para garantir o ciclo de pintura do navegador (Paint)
+          setTimeout(() => {
+            this.configTour();
+          }, 0);
+        });
+      }
+    });
     }
 
   // ---------------------------------------------------------------------------
@@ -137,4 +163,42 @@ export class Home {
   //   const element = event.target as HTMLSelectElement;
   //   this.currentUser.set(element.value);
   // }
+
+  // Controle do tour
+  configTour() {
+    console.log('Iniciando o tour com o DOM pronto!');
+    // Configura os 4 passos solicitados pelo roteiro
+    const customSteps: TourStep[] = [
+      {
+        id: 'step1',
+        targetId: 'btn-sobre',
+        title: 'Conheça nossa Empresa',
+        description: 'Clique aqui para saber mais sobre a nossa jornada.',
+        position: 'right'
+      },
+      {
+        id: 'step2',
+        targetId: 'btn-contato',
+        title: 'Fale Conosco',
+        description: 'Canal direto com nossa equipe de suporte.',
+        position: 'bottom'
+      },
+      {
+        id: 'step3',
+        targetId: 'gatilho-idioma',
+        title: 'Selecione seu Idioma',
+        description: 'Aqui você pode gerenciar a localização.',
+        position: 'left'
+      },
+      {
+        id: 'step4',
+        targetId: 'drop-aberto',
+        title: 'Escolha uma Opção',
+        description: 'Selecione a linguagem nativa para tradução completa.',
+        position: 'left'
+      }
+    ];
+    this.tourService.initialize(customSteps); // Passo os dados
+    this.tourService.start(); // Inicia o tour
+  }
 }
