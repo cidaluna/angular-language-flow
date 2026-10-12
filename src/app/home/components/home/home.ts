@@ -8,6 +8,7 @@ import { ClearSwitchError, LoadInitialHomeItems } from './state/home-language.ac
 import { FeatureFlagService } from './services/feature-flag.service';
 import { TourGuideService } from '../../../shared/components/tour-guide/tour-guide.service';
 import { TourStep } from '../../../shared/components/tour-guide/tour-guide.types';
+import { TourOrchestratorService } from '../../../shared/components/tour-guide/tour-guide-orchestrator.service';
 
 
 @Component({
@@ -21,6 +22,7 @@ export class Home {
   private store = inject(Store);
   private readonly ffService = inject(FeatureFlagService);
   private tourService = inject(TourGuideService);
+  private tourOrchestratorService = inject(TourOrchestratorService);
 
   protected currentUser = signal('JCS1234');
   protected items = toSignal(this.store.select(HomeLanguageState.items), { initialValue: [] });
@@ -196,9 +198,24 @@ export class Home {
         title: 'Escolha uma Opção',
         description: 'Selecione a linguagem nativa para tradução completa.',
         position: 'left'
+      },
+       {
+        id: 'step5',
+        targetId: 'custom-brand',
+        title: 'Logo da aplicação',
+        description: 'Aqui você tem o logo da aplicação.',
+        position: 'bottom'
       }
     ];
-    this.tourService.initialize(customSteps); // Passo os dados
-    this.tourService.start(); // Inicia o tour
+    //this.tourService.initialize(customSteps); // Passo os dados
+    //this.tourService.start(); // Inicia o tour
+
+    // Em vez de inicializar direto, nós solicitamos a entrada na fila do orquestrador.
+    // Se este for o primeiro tour da tela, o orquestrador dará a largada imediatamente!
+    this.tourOrchestratorService.requestTour({
+      id: 'tour-home-first',      // Identificador único deste bloco de passos
+      priority: 1,                // Define a ordem: 1 executa primeiro, 2 entra em espera, etc.
+      steps: customSteps          // O seu array de passos configurado acima
+    });
   }
 }

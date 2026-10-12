@@ -17,11 +17,12 @@ export class TourGuideService {
   // Configura os passos iniciais do tour no estado da aplicação.
   initialize(steps: TourStep[]): void {
     this.steps.set(steps);
-    console.log('Passos inicializados no serviço:', this.steps.length);
+    console.log(':: Entrou no initialize do tour sevice com :', this.steps.length);
   }
 
   // Inicia o tour a partir do primeiro passo caso o carregamento geral esteja concluído.
   start(): void {
+    console.log(':: Entrou no start do tour sevice');
     if (this.steps().length === 0) return;
     this.currentStepIndex.set(0);
     this.executeBeforeShow();
