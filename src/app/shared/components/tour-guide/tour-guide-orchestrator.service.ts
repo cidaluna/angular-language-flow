@@ -1,18 +1,37 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { TourRequest, TourStep } from './tour-guide.types';
 import { TourGuideService } from './tour-guide.service';
+import { StorageService } from './../../../home/components/home/services/storage.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TourOrchestratorService {
+  private readonly storageService = inject(StorageService);
+  private readonly tourService = inject(TourGuideService);
+
   // Fila interna de tours aguardando execução
   private tourQueue: TourRequest[] = [];
 
   // Signal que indica se existe algum tour rodando ativamente na tela neste momento
   public isAnyTourRunning = signal<boolean>(false);
 
-  constructor(private tourService: TourGuideService) {}
+  /**
+   * Checa se o usuário específico já concluiu com êxito este bloco de tour.
+   */
+  public isTourCompleted(tourId: string, userId: string): boolean {
+    const key = `tour_${tourId}_user_${userId}`;
+    return this.storageService.getItem(key) === 'true';
+  }
+
+  /**
+   * Grava o status definitivo de conclusão.
+   */
+  public saveTourCompletion(tourId: string, userId: string): void {
+    const key = `tour_${tourId}_user_${userId}`;
+    this.storageService.setItem(key, 'true');
+    console.log(`[Tour Orchestrator] Status gravado no LocalStorage para a chave: ${key}`);
+  }
 
   /**
    * Componentes chamam este método para entrar na fila do Tour
@@ -42,15 +61,22 @@ export class TourOrchestratorService {
 
     // Remove e captura o tour de maior prioridade (o primeiro da fila)
     const nextTour = this.tourQueue.shift()!;
+
     console.log(`[Tour Orchestrator] Iniciando o tour de ID: ${nextTour.id} (Prioridade: ${nextTour.priority})`);
 
     // Injeta os passos no serviço visual do Tour
-    this.tourService.initialize(nextTour.steps);
+    this.tourService.initialize(nextTour.id, nextTour.steps);
 
     // Aguarda o usuário concluir ou fechar o tour atual antes de avançar o código
-    await this.tourService.start();
+    const resultTour = await this.tourService.start();
 
-    console.log(`[Tour Orchestrator] Tour ${nextTour.id} finalizado com sucesso!`);
+    console.log(`[Tour Orchestrator] Tour ${nextTour.id} finalizado com resultado: ${resultTour}`);
+
+     // Só grava no LocalStorage se o clique veio estritamente do botão Concluir!
+    if (resultTour === 'COMPLETED') {
+      const mockUserId = 'JCS1234'; // garanta a captura do ID real do usuário aqui
+      this.saveTourCompletion(nextTour.id, mockUserId);
+    }
 
     // Chamada recursiva: Executa o próximo tour da fila de forma sequencial
     this.processNextTour();

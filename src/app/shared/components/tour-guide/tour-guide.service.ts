@@ -1,10 +1,13 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, inject, signal, computed } from '@angular/core';
 import { TourStep, TourTelemetry, TourAction } from './tour-guide.types';
 
 @Injectable({ providedIn: 'root' })
 export class TourGuideService {
-  private mockUserId = 'user_98765';
-  private tourPromiseResolver?: () => void;
+  private mockUserId = 'JCS1234';
+  private tourPromiseResolver?: (value: 'COMPLETED' | 'SKIPPED' | 'CLOSED' | PromiseLike<'COMPLETED' | 'SKIPPED' | 'CLOSED'>) => void;
+
+   // NOVO SIGNAL: Guarda o ID do bloco ativo
+  readonly activeTourId = signal<string>('');
 
   readonly steps = signal<TourStep[]>([]);
   readonly currentStepIndex = signal<number>(-1);
@@ -15,19 +18,21 @@ export class TourGuideService {
     return idx >= 0 && idx < this.steps().length ? this.steps()[idx] : null;
   });
 
-  // Configura os passos iniciais do tour no estado da aplicação.
-  initialize(steps: TourStep[]): void {
+  // Configura os passos iniciais do tour e atualiza o método initialize para receber o ID do bloco:
+  initialize(tourId: string, steps: TourStep[]): void {
+    this.activeTourId.set(tourId);
     this.steps.set(steps);
     console.log(':: Entrou no initialize do tour sevice com :', this.steps.length);
   }
 
   // Inicia o tour a partir do primeiro passo caso o carregamento geral esteja concluído.
-  start(): Promise<void> {
+  // Ajuste o tipo do start para devolver o tipo correto na Promise
+  start(): Promise<'COMPLETED' | 'SKIPPED' | 'CLOSED'> {
     console.log(':: Entrou no start do tour service');
 
-    return new Promise<void>((resolve) => {
+    return new Promise<'COMPLETED' | 'SKIPPED' | 'CLOSED'>((resolve) => {
       if (this.steps().length === 0) {
-        resolve(); // Se não tiver passos, destrava a fila imediatamente
+        resolve('CLOSED'); // Se não tiver passos, destrava a fila imediatamente
         return;
       }
 
@@ -53,7 +58,7 @@ export class TourGuideService {
       this.executeBeforeShow();
       this.saveTelemetry('next');
     } else {
-      await this.complete();
+      await this.complete();  // Se chegou no fim, chama o complete
     }
   }
 
@@ -74,19 +79,15 @@ export class TourGuideService {
     this.saveTelemetry('skip');
     const current = this.currentStep();
     if (current?.afterHide) await current.afterHide();
-    this.reset();
-    // GATILHO ESSENCIAL ADICIONADO: Impede o travamento da fila ao pular o tour
-    this.liberarOrquestrador();
+    this.resetAndResolve('SKIPPED');
   }
 
-  // Fecha o balão abruptamente ao clicar no botão X ou ESC, executando a limpeza do step atual.
+  // Se fechar no X ou ESC, apenas fecha, sem salvar no Storage.
   async close(): Promise<void> {
     this.saveTelemetry('close');
     const current = this.currentStep();
     if (current?.afterHide) await current.afterHide();
-    this.reset();
-    // GATILHO: Avisa o orquestrador que este bloco fechou
-    this.liberarOrquestrador();
+    this.resetAndResolve('CLOSED');
   }
 
   // Conclui com êxito o fluxo completo executando o afterHide do último passo e salvando os logs definitivos.
@@ -94,22 +95,19 @@ export class TourGuideService {
     this.saveTelemetry('complete');
     const current = this.currentStep();
     if (current?.afterHide) await current.afterHide();
-    this.reset();
-    // GATILHO: Avisa o orquestrador que este bloco fechou
-    this.liberarOrquestrador();
+
+    // O serviço do guia APENAS avisa a Promise de fechamento com uma string de sucesso
+    this.resetAndResolve('COMPLETED');
   }
 
  // Reseta o indexador forçando a ocultação de todos os elementos visuais do tour.
-  private reset(): void {
+  private resetAndResolve(reason: 'COMPLETED' | 'SKIPPED' | 'CLOSED'): void {
     this.currentStepIndex.set(-1);
-    this.steps.set([]); // Higienização de estado para evitar vazamentos de memória (residual)
-  }
+    this.steps.set([]);
 
-  // NOVA FUNÇÃO AUXILIAR: Executa o resolve e limpa a memória
-  private liberarOrquestrador(): void {
     if (this.tourPromiseResolver) {
-      this.tourPromiseResolver(); // <--- Destrava o 'await' do Orquestrador!
-      this.tourPromiseResolver = undefined; // Limpa a referência para o próximo bloco da fila
+      this.tourPromiseResolver(reason); // Destrava o 'await' do Orquestrador perfeitamente
+      this.tourPromiseResolver = undefined; // Limpa o ponteiro da memória
     }
   }
 

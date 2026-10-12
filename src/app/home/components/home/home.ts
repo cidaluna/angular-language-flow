@@ -109,16 +109,24 @@ export class Home {
       const completeData = this.successData();
       const uncompleteData = this.loading();
       const completeFlagCards = this.canShowCards();
+      const userActive = this.currentUser();
 
-      // Condição perfeita: Tem dados na tela E o loader global sumiu!
+      // GARANTIA EXTRA: Só avalia o LocalStorage se os dados da API REALMENTE já pousaram na tela!
       if (completeData && !uncompleteData && completeFlagCards) {
-        // O untracked impede que o effect entre em loop caso o tourService altere algum signal interno
-        untracked(() => {
-          // Um micro-timeout de 0ms apenas para garantir o ciclo de pintura do navegador (Paint)
-          setTimeout(() => {
-            this.configTour();
-          }, 0);
-        });
+
+        // Checa se o usuário já concluiu o segundo tour (o fim da esteira)
+        const seenAllTours = this.tourOrchestratorService.isTourCompleted('tour-home-second', userActive);
+
+        // Se ele NÃO viu o tour completo, aí sim liberamos o agendamento!
+        if (!seenAllTours) {
+          untracked(() => {
+            setTimeout(() => {
+              this.configTour();
+            }, 0);
+          });
+        } else {
+          console.log(`[Home Effect] Tour bloqueado com sucesso! O usuário ${userActive} já passou pelo onboarding.`);
+        }
       }
     });
     }
