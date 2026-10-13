@@ -390,3 +390,44 @@ Assim que o usuário selecionar "Français" no dropdown:
 2. O `effect()` da Home detecta a mudança e ativa o loader global.
 3. O `HomeService` faz o `HttpClient.get()` injetando o idioma no header.
 4. O `switchMap` captura o novo bloco do `db.json`, baixa o arquivo `fr-FR.json` e redesenha a tela perfeitamente sem nenhuma piscada bilingue!
+
+---
+## 🗺️ Componente Tour Guide
+
+Uma solução corporativa, moderna e reativa desenvolvida em **Angular** para exibir guias de funcionalidades (*onboarding*) passo a passo de forma totalmente orquestrada.
+
+### 🎯 O que ele faz?
+O componente destaca elementos específicos na tela (através de um holofote visual/spotlight) e exibe balões explicativos (*tooltips*). Ele gerencia filas de múltiplos guias por nível de prioridade e possui inteligência nativa de responsividade (Mobile Guard), prevenção de colisões nas bordas (Anti-Collision) e acessibilidade por teclado (Focus Trap).
+
+---
+
+### 📥 Parâmetros de Entrada (Inputs)
+O componente visual opera como um *Dumb Component*, recebendo todo o estado reativo via **Signal Inputs**:
+
+*   `[steps]`: `TourStep[]` ➔ Lista com as configurações e os IDs dos elementos alvos do guia atual.
+*   `[currentStepIndex]`: `number` ➔ O índice numérico do passo ativo no momento (baseado em zero).
+*   `[isActive]`: `boolean` ➔ Sinalizador que dita se o tour deve ser renderizado e visível na tela.
+
+---
+
+### 📤 Parâmetros de Saída (Outputs)
+Emite eventos nativos estruturados para que o serviço orquestrador controle o fluxo da aplicação:
+
+*   `(nextClick)` ➔ Disparado ao avançar para o próximo passo.
+*   `(previousClick)` ➔ Disparado ao retornar para o passo anterior.
+*   `(skipClick)` ➔ Acionado quando o usuário decide pular o guia completo.
+*   `(closeClick)` ➔ Emitido ao fechar o balão abruptamente (botão `X` ou tecla `ESC`).
+*   `(completeClick)` ➔ Gatilho de sucesso disparado estritamente no botão de conclusão do último passo.
+
+---
+
+### 🛡️ Regras de Negócio Aplicadas até o Momento
+
+1.  **Fila de Prioridade Baseada em SOLID 🚦**
+    *   Múltiplos componentes podem solicitar a abertura de tours simultaneamente. O `TourOrchestratorService` ordena os pedidos por pesos de urgência (`priority: 1, 2...`) e executa um bloco estritamente após o término do outro, sem sobreposições.
+2.  **Persistência Restrita com Escopo de Usuário (Regra do PM) 💾**
+    *   O progresso é salvo de forma permanente no `LocalStorage` do navegador, impedindo que o onboarding reapareça após o recarregamento da página (F5).
+    *   **Trava de Segurança:** A flag de conclusão só é gravada se o usuário clicar estritamente em **Concluir**. Se ele pular ou fechar no "X", o tour voltará a ser exibido em visitas futuras.
+    *   **Isolamento de Estado:** A chave de gravação é amarrada dinamicamente ao ID do usuário logado (ex: `tour_id_user_JCS1234`), evitando que um colaborador limpe o estado do outro na mesma máquina física.
+3.  **Sincronia Estrita de Renderização do DOM 🎨**
+    *   O tour utiliza um `effect` moderno que aguarda o sucesso absoluto da Store do NGXS, o fim dos loaders de chamadas HTTP (Interceptor) e o cálculo das Feature Flags para apenas depois dar a largada, eliminando quebras visuais e garantindo que o primeiro passo seja registrado perfeitamente.
